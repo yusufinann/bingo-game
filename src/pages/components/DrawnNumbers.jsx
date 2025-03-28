@@ -1,38 +1,104 @@
-import React from 'react';
-import { Grid, Paper, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, IconButton, Typography, Container } from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
-const DrawnNumbers = ({ drawnNumbers }) => {
-  const isNumberDrawn = (number) => drawnNumbers.includes(number);
+const DrawnNumbers= ({ drawnNumbers }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const numbersPerPage = 10;
+
+  // Automatically scroll to the last page when drawnNumbers change
+  useEffect(() => {
+    const totalPages = Math.ceil(drawnNumbers.length / numbersPerPage);
+    setCurrentPage(totalPages - 1);
+  }, [drawnNumbers]);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(drawnNumbers.length / numbersPerPage);
+
+  // Get numbers for current page (showing from the end)
+  const currentPageNumbers = drawnNumbers.slice(
+    Math.max(0, drawnNumbers.length - (currentPage + 1) * numbersPerPage),
+    drawnNumbers.length - currentPage * numbersPerPage
+  ).reverse(); // Reverse to maintain drawing order
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1));
+  };
 
   return (
-    <Paper 
-      elevation={3}
-      sx={{ p: 3, borderRadius: 2, bgcolor: 'background.default' }}
-    >
-      <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        Drawn Numbers
-      </Typography>
-      <Grid container spacing={0.5}>
-        {Array.from({ length: 90 }, (_, i) => i + 1).map(number => (
-          <Grid item xs={1} key={number}>
-            <Paper
-              elevation={1}
+    <Container>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          gap: 2,
+          my: 2 ,
+        }}
+      >
+        <IconButton 
+          onClick={handlePrevPage} 
+          disabled={currentPage === 0}
+          color="primary"
+        >
+          <ChevronLeft />
+        </IconButton>
+
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            gap: 1.5, 
+            alignItems: 'center' 
+          }}
+        >
+          {currentPageNumbers.map((number) => (
+            <Box
+              key={number}
               sx={{
-                p: 0.5,
-                textAlign: 'center',
-                minWidth: 30,
-                bgcolor: isNumberDrawn(number) ? 'primary.light' : 'background.paper',
-                color: isNumberDrawn(number) ? 'white' : 'text.primary',
-                transition: 'all 0.3s ease',
-                opacity: isNumberDrawn(number) ? 1 : 0.7
+                width: 50,
+                height: 50,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                boxShadow: 2,
+                transition: 'transform 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.05)'
+                }
               }}
             >
               {number}
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-    </Paper>
+            </Box>
+          ))}
+        </Box>
+
+        <IconButton 
+          onClick={handleNextPage} 
+          disabled={currentPage === totalPages - 1}
+          color="primary"
+        >
+          <ChevronRight />
+        </IconButton>
+      </Box>
+
+      {/* Page indicator */}
+      <Typography 
+        variant="body2" 
+        color="text.secondary" 
+        align="center"
+        sx={{ mt: 1 }}
+      >
+        Page {totalPages - currentPage} of {totalPages}
+      </Typography>
+    </Container>
   );
 };
 

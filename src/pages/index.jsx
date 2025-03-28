@@ -1,8 +1,6 @@
-// BingoGame.js
 import React from "react";
 import {
   Box,
-  Card,
   CardContent,
   Typography,
   Button,
@@ -15,7 +13,6 @@ import {
   TableCell,
   TableRow,
   TableHead,
-
 } from "@mui/material";
 import {
   Casino as CasinoIcon,
@@ -24,7 +21,6 @@ import {
 import { useTheme } from "@mui/material/styles";
 
 import Ticket from "./components/Ticket";
-import PlayersList from "./components/PlayersList";
 import NumberDisplay from "./components/NumberDisplay";
 import DrawnNumbers from "./components/DrawnNumbers";
 import WinnerDialog from "./components/WinnerDialog";
@@ -186,7 +182,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
                   setGameState(prev => ({ ...prev, ticket: myPlayerData.ticket }));
                 }
               }
-              
+
           setNotification({
             open: true,
             message: "Game has started!",
@@ -377,34 +373,18 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     setHasCompletedBingo(false); // Reset hasCompletedBingo here
   };
   return (
-    <Container maxWidth="100%" sx={{ py: 1 }}>
-      <Card
-        elevation={8}
-        sx={{
-          borderRadius: 4,
-          bgcolor: "background.paper",
-          overflow: "hidden",
-        }}
-      >
-        <CardContent sx={{ p: 4 }}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 2,
-              mb: 4,
-              borderRadius: 2,
-              background: theme.palette.background.default,
-            }}
-          >
-            <PlayersList
+    <Container maxWidth="100%" style={{ width: '100%',height:'100%'}}> {/* Container width 80% and removed margin auto */}
+
+        <CardContent sx={{ p: 3 }}>
+            {/* <PlayersList
               members={members}
               isHost={members[0]?.id === currentUser?.id}
               soundEnabled={soundEnabled}
               toggleSound={() => setSoundEnabled((prev) => !prev)}
-            />
-          </Paper>
+            /> */}
 
-          <Stack direction="row" spacing={2} justifyContent="center" mb={4}>
+{/*Oyun Butonları*/}
+          <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
             {!gameState.gameStarted && members[0]?.id === currentUser?.id && (
               <Button
                 variant="contained"
@@ -443,39 +423,40 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
               )}
           </Stack>
 
-          <NumberDisplay
-            currentNumber={gameState.currentNumber}
-            theme={theme}
-            manualMode={gameState.drawMode === "manual"}
-          />
-          <ActiveNumbers activeNumbers={gameState.activeNumbers} />
-          <p>Tamamlayan Oyuncular: {completedPlayers.length}</p>
+          <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginBottom: 4 }}>
+            <Box sx={{ flex: '3', width: '60vw'}}> {/* Ticket Box - Increased flex and minWidth */}
+              <Typography
+                variant="h6"
+                sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <TrophyIcon color="primary" />
+                Your Ticket
+              </Typography>
+              <Ticket
+                ticket={gameState.ticket}
+                markedNumbers={markedNumbers}
+                activeNumbers={gameState.activeNumbers}
+                onMarkNumber={handleMarkNumber}
+              />
+            </Box>
+            <Box sx={{ flex: '1', width: '40vw' }}> {/* Number Display Box */}
+              <NumberDisplay
+                currentNumber={gameState.currentNumber}
+                theme={theme}
+                manualMode={gameState.drawMode === "manual"}
+              />
+              <ActiveNumbers activeNumbers={gameState.activeNumbers} />
+            </Box>
+          </Box>
+
+
+          <DrawnNumbers drawnNumbers={gameState.drawnNumbers} />
+          <Typography variant="body1" sx={{ mt: 2 }}>Tamamlayan Oyuncular: {completedPlayers.length}</Typography>
           {hasCompletedBingo && (
           <div className="completion-message">
             Tebrikler! Bingo'yu tamamladınız!
           </div>
         )}
-          <Paper
-            elevation={3}
-            sx={{ p: 3, mb: 4, borderRadius: 2, bgcolor: "background.default" }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <TrophyIcon color="primary" />
-              Your Ticket
-            </Typography>
-
-            <Ticket
-              ticket={gameState.ticket}
-              markedNumbers={markedNumbers}
-              activeNumbers={gameState.activeNumbers}
-              onMarkNumber={handleMarkNumber}
-            />
-          </Paper>
-
-          <DrawnNumbers drawnNumbers={gameState.drawnNumbers} />
 
           {/* Real-time Rankings Display */}
           {gameState.gameStarted && !gameState.gameEnded && gameState.rankings.length > 0 && (
@@ -504,7 +485,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
 
 
         </CardContent>
-      </Card>
 
       <NotificationSnackbar
         open={notification.open}

@@ -75,11 +75,10 @@ const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber }
   };
 
   return (
-     <Box sx={{display: 'flex', alignItems: 'center',justifyContent:'center'}}>
+     <Box sx={{display: 'flex',backgroundColor:'orange'}}>
     <Box
       sx={{
-        width: '60%',
-        //maxWidth: '400px',
+        width: '100%',
         border: '2px solid #1976d2',
         p: 0.5,
         bgcolor: 'white'
