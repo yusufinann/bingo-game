@@ -27,7 +27,7 @@ import WinnerDialog from "./components/WinnerDialog";
 import NotificationSnackbar from "./components/NotificationSnackbar";
 import Countdown from "./components/Countdown";
 import ActiveNumbers from "./components/ActiveNumbers";
-import RankingsDialog from "./components/RankingsDialog"; // Import RankingsDialog
+import RankingsDialog from "./components/RankingsDialog"; 
 
 // İlgili ses dosyaları:
 import bingoWinSound from "../assets/bingo-win-sound.wav";
@@ -42,7 +42,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
   const theme = useTheme();
 
   const [gameState, setGameState] = useState({
-    gameId: null, // Yeni gameId state'i
+    gameId: null, 
     ticket: [],
     drawnNumbers: [],
     activeNumbers: [],
@@ -50,12 +50,12 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     gameStarted: false,
     gameEnded: false,
     winner: null,
-    players: [], // Oyuncuların listesi ve sıralamaları için
+    players: [], 
     message: "",
     drawMode: "auto",
     drawer: null,
     bingoMode: "classic",
-    rankings: [], // Oyun içi sıralamalar için state
+    rankings: [], 
   });
   const [markedNumbers, setMarkedNumbers] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -120,8 +120,8 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             activeNumbers: data.activeNumbers || [],
             drawMode: data.drawMode || "auto",
             drawer: data.drawer || null,
-            rankings: data.rankings || [], // Sıralamaları al
-            gameId: data.gameId, // gameId'yi state'e kaydet
+            rankings: data.rankings || [],
+            gameId: data.gameId, 
           }));
           setCompletedPlayers(data.completedPlayers || []);
           setHasCompletedBingo(data.completedBingo || false);
@@ -136,8 +136,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
           });
           break;
          case "BINGO_NUMBER_MARKED":
-          // Sunucudan gelen işaretlenen numara güncellemesi
-         // Update marked numbers if it's for current player
          if (data.playerId === currentUser?.id) {
           setMarkedNumbers(data.markedNumbers);
         }
@@ -205,7 +203,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             activeNumbers: data.activeNumbers,
           }));
           break;
-        case "BINGO_WIN": // Artık kullanılmıyor, BINGO_CALL_SUCCESS ile değiştirildi.
+        case "BINGO_WIN": 
           setGameState((prev) => ({
             ...prev,
             gameEnded: true,
@@ -231,6 +229,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
           });
           break;
         case "BINGO_CALL_SUCCESS":
+          setCompletedPlayers(data.completedPlayers || []);
             setNotification({
               open: true,
               message: `${data.playerName} got Bingo! (Rank: ${data.rank})`,
@@ -263,8 +262,8 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             setGameState(prev => ({
               ...prev,
               gameEnded: true,
-              gameStarted: false, // Oyunu bitir
-              rankings: data.finalRankings, // Final sıralamaları al
+              gameStarted: false,
+              rankings: data.finalRankings, 
             }));
             setShowRankingsDialog(true); // Oyun bittiğinde genel sıralama dialogunu göster
             setShowPersonalRankingsDialog(false); // Bireysel sıralama dialogunu kapat
@@ -357,7 +356,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
       </Box>
     );
   }
-  const onGameReset = () => { // Ensure this function resets completedPlayers and hasCompletedBingo
+  const onGameReset = () => {
     setGameState(prev => ({
       ...prev,
       gameStarted: false,
@@ -369,21 +368,13 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
       rankings: [],
     }));
     setMarkedNumbers([]);
-    setCompletedPlayers([]); // Reset completed players here
-    setHasCompletedBingo(false); // Reset hasCompletedBingo here
+    setCompletedPlayers([]); 
+    setHasCompletedBingo(false);
   };
   return (
-    <Container maxWidth="100%" style={{ width: '100%',height:'100%'}}> {/* Container width 80% and removed margin auto */}
+    <Container maxWidth="100%" style={{ width: '100%',height:'100%'}}>
 
         <CardContent sx={{ p: 3 }}>
-            {/* <PlayersList
-              members={members}
-              isHost={members[0]?.id === currentUser?.id}
-              soundEnabled={soundEnabled}
-              toggleSound={() => setSoundEnabled((prev) => !prev)}
-            /> */}
-
-{/*Oyun Butonları*/}
           <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
             {!gameState.gameStarted && members[0]?.id === currentUser?.id && (
               <Button
@@ -424,7 +415,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
           </Stack>
 
           <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginBottom: 4 }}>
-            <Box sx={{ flex: '3', width: '60vw'}}> {/* Ticket Box - Increased flex and minWidth */}
+            <Box sx={{ flex: '3', width: '60vw'}}> 
               <Typography
                 variant="h6"
                 sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
@@ -451,7 +442,18 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
 
 
           <DrawnNumbers drawnNumbers={gameState.drawnNumbers} />
-          <Typography variant="body1" sx={{ mt: 2 }}>Tamamlayan Oyuncular: {completedPlayers.length}</Typography>
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1, mb: 2 }}>
+            {gameState.drawnNumbers.length}/{90} Drawn Numbers
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 2 }}>
+  Tamamlayan Oyuncular ({completedPlayers.length}):{" "}
+  {completedPlayers.map((player, index) => (
+    <span key={player.id}>
+      {player.userName}{index < completedPlayers.length - 1 ? ", " : ""}
+    </span>
+  ))}
+</Typography>
+{console.log(completedPlayers)}
           {hasCompletedBingo && (
           <div className="completion-message">
             Tebrikler! Bingo'yu tamamladınız!
@@ -521,8 +523,8 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
-        onGameReset={onGameReset} // Pass the reset function
-        gameId={gameState.gameId} // gameId prop'unu ekleyin
+        onGameReset={onGameReset} 
+        gameId={gameState.gameId} 
       />
        <RankingsDialog // Personal Rankings Dialog - Only shows for the player who called Bingo
         open={showPersonalRankingsDialog}
@@ -530,10 +532,10 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
-        dialogTitle="Your Rank" // Custom title for personal dialog
-        showCloseButton={true} // Show close button for personal dialog
+        dialogTitle="Your Rank"
+        showCloseButton={true}
         onGameReset={onGameReset}
-        gameId={gameState.gameId} // gameId prop'unu ekleyin
+        gameId={gameState.gameId} 
       />
 
       <style>

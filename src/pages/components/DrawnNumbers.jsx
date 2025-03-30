@@ -8,18 +8,22 @@ const DrawnNumbers= ({ drawnNumbers }) => {
 
   // Automatically scroll to the last page when drawnNumbers change
   useEffect(() => {
-    const totalPages = Math.ceil(drawnNumbers.length / numbersPerPage);
-    setCurrentPage(totalPages - 1);
+    if (drawnNumbers.length > 0) { // Ensure there are drawn numbers before calculating pages
+      const totalPages = Math.ceil(drawnNumbers.length / numbersPerPage);
+      setCurrentPage(totalPages > 0 ? totalPages - 1 : 0); // Go to last page, or page 0 if no pages
+    } else {
+      setCurrentPage(0); // Reset to page 0 if drawnNumbers is empty
+    }
   }, [drawnNumbers]);
 
   // Calculate total pages
   const totalPages = Math.ceil(drawnNumbers.length / numbersPerPage);
 
-  // Get numbers for current page (showing from the end)
+  // Get numbers for current page (showing in drawing order)
   const currentPageNumbers = drawnNumbers.slice(
-    Math.max(0, drawnNumbers.length - (currentPage + 1) * numbersPerPage),
-    drawnNumbers.length - currentPage * numbersPerPage
-  ).reverse(); // Reverse to maintain drawing order
+    currentPage * numbersPerPage,
+    (currentPage + 1) * numbersPerPage
+  );
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(0, prev - 1));
@@ -31,28 +35,28 @@ const DrawnNumbers= ({ drawnNumbers }) => {
 
   return (
     <Container>
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           gap: 2,
           my: 2 ,
         }}
       >
-        <IconButton 
-          onClick={handlePrevPage} 
+        <IconButton
+          onClick={handlePrevPage}
           disabled={currentPage === 0}
           color="primary"
         >
           <ChevronLeft />
         </IconButton>
 
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            gap: 1.5, 
-            alignItems: 'center' 
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center'
           }}
         >
           {currentPageNumbers.map((number) => (
@@ -80,9 +84,9 @@ const DrawnNumbers= ({ drawnNumbers }) => {
           ))}
         </Box>
 
-        <IconButton 
-          onClick={handleNextPage} 
-          disabled={currentPage === totalPages - 1}
+        <IconButton
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages - 1 || totalPages <= 1} // Disable next button if on last page or only one page
           color="primary"
         >
           <ChevronRight />
@@ -90,13 +94,13 @@ const DrawnNumbers= ({ drawnNumbers }) => {
       </Box>
 
       {/* Page indicator */}
-      <Typography 
-        variant="body2" 
-        color="text.secondary" 
+      <Typography
+        variant="body2"
+        color="text.secondary"
         align="center"
         sx={{ mt: 1 }}
       >
-        Page {totalPages - currentPage} of {totalPages}
+        {totalPages > 0 ? `Page ${currentPage + 1} of ${totalPages}` : 'Page 1 of 1'}
       </Typography>
     </Container>
   );
