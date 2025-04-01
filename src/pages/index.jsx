@@ -85,6 +85,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
   const [showPersonalRankingsDialog, setShowPersonalRankingsDialog] = useState(false); // Bireysel sıralama dialogu kontrolü
   const [completedPlayers, setCompletedPlayers] = useState([]);
   const [hasCompletedBingo, setHasCompletedBingo] = useState(false);
+  const [competitionMode, setCompetitionMode] = useState("competitive"); 
   const playSound = (sound) => {
     if (soundEnabled) {
       sound.currentTime = 0;
@@ -165,10 +166,11 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             drawMode: data.drawMode || "auto",
             drawer: data.drawer || null,
             bingoMode: data.bingoMode || "classic",
-            rankings: [], // Oyun başladığında sıralamayı sıfırla
+            rankings: [],      // Oyun başladığında sıralamayı sıfırla
             drawnNumbers: [], // **EKLE veya KONTROL ET: Çekilen numaraları sıfırlıyor muyuz?**
            activeNumbers: [], // **EKLE veya KONTROL ET: Aktif numaraları sıfırlıyor muyuz?**
            gameId: data.gameId, // gameId'yi state'e kaydet
+           competitionMode: data.competitionMode || 'competitive',
           }));
           setMarkedNumbers([]); // Reset marked numbers on game start
           setCompletedPlayers([]); // Reset completed players on game start
@@ -252,8 +254,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             break;
             case "BINGO_GAME_STATUS":
               setCompletedPlayers(data.completedPlayers || []);
-
-              // Oyuncunun durumunu güncelle
               if (data.completedPlayers && data.completedPlayers.includes(currentUser?.id)) {
                 setHasCompletedBingo(true);
               }
@@ -311,6 +311,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
         drawMode, // "auto" veya "manual"
         drawer: drawMode === "manual" ? selectedDrawer : null,
         bingoMode: selectedBingoMode, // "classic", "extended" veya "fast"
+        competitionMode: competitionMode, 
       })
     );
     setOpenStartDialog(false);
@@ -528,6 +529,8 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
         setSelectedBingoMode={setSelectedBingoMode}
         members={members}
         onStartGame={startGameWithOptions}
+        competitionMode={competitionMode}
+        setCompetitionMode={setCompetitionMode}
       />
 
 

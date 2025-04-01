@@ -25,7 +25,9 @@ const StartGameDialog = ({
   selectedBingoMode,
   setSelectedBingoMode,
   members,
-  onStartGame
+  onStartGame,
+  competitionMode, 
+  setCompetitionMode 
 }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -58,42 +60,69 @@ const StartGameDialog = ({
           </FormControl>
         )}
 
-        {/* Game mode selection */}
+        {/* Bingo Mode Selection (Classic, Extended, Superfast) */}
         <FormControl component="fieldset" fullWidth margin="normal">
-          <RadioGroup 
-            value={selectedBingoMode} 
+          <RadioGroup
+            value={selectedBingoMode}
             onChange={(e) => setSelectedBingoMode(e.target.value)}
           >
-            <FormControlLabel 
-              value="classic" 
-              control={<Radio />} 
-              label="Classic Bingo (Standard Mode) 🔹" 
+            <FormControlLabel
+              value="classic"
+              control={<Radio />}
+              label="Classic Bingo (Standard Mode) 🔹"
             />
-            <FormControlLabel 
-              value="extended" 
-              control={<Radio />} 
-              label="Extended Time Mode (Easy Mode) 🕒" 
+            <FormControlLabel
+              value="extended"
+              control={<Radio />}
+              label="Extended Time Mode (Easy Mode) 🕒"
             />
-            <FormControlLabel 
-              value="superfast" 
-              control={<Radio />} 
-              label="Super Fast Bingo (Hard Mode) ⚡" 
+            <FormControlLabel
+              value="superfast"
+              control={<Radio />}
+              label="Super Fast Bingo (Hard Mode) ⚡"
             />
           </RadioGroup>
         </FormControl>
 
-        {/* Mode descriptions */}
+        {/* Competition Mode Selection */}
+        <FormControl component="fieldset" fullWidth margin="normal">
+          <RadioGroup
+            value={competitionMode}
+            onChange={(e) => setCompetitionMode(e.target.value)}
+          >
+            <FormControlLabel
+              value="competitive"
+              control={<Radio />}
+              label="Competitive Mode (Ranked) 🏆"
+            />
+            <FormControlLabel
+              value="non-competitive"
+              control={<Radio />}
+              label="Non-Competitive Mode (First Bingo Wins!) 🎉"
+            />
+          </RadioGroup>
+        </FormControl>
+
+
+        {/* Mode descriptions - Keep the Bingo Mode descriptions as is */}
         <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-          <strong>Classic:</strong> One number every 5 seconds, displayed for 5 seconds; 
+          <strong>Classic:</strong> One number every 5 seconds, displayed for 5 seconds;
           only the latest number can be marked, no history displayed.
         </Typography>
         <Typography variant="body2" color="textSecondary">
-          <strong>Extended:</strong> One number every 5 seconds, displayed for 10 seconds; 
+          <strong>Extended:</strong> One number every 5 seconds, displayed for 10 seconds;
           up to 2 numbers visible, history (previous number) is listed and markable.
         </Typography>
         <Typography variant="body2" color="textSecondary">
-          <strong>Super Fast:</strong> One number every 3 seconds, displayed for 3 seconds; 
+          <strong>Super Fast:</strong> One number every 3 seconds, displayed for 3 seconds;
           quick decisions required, wrong "Bingo!" calls are penalized.
+        </Typography>
+         {/* Competition Mode descriptions */}
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+          <strong>Competitive Mode:</strong> Players are ranked by score and completion time. The game continues until all numbers are drawn or all players have completed Bingo.
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          <strong>Non-Competitive Mode:</strong> The first player to call "Bingo!" wins immediately, and the game ends.
         </Typography>
       </DialogContent>
 
