@@ -79,14 +79,12 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
   const matchSoundAudio = useMemo(() => new Audio(matchSound), []);
   const wrongBingoSoundAudio = useMemo(() => new Audio(wrongBingoSound), []);
   const gameStartAudio = useMemo(() => new Audio(gameStartAudioSrc), []);
-
+  const [isDrawButtonDisabled, setIsDrawButtonDisabled] = useState(false);
 
   const [showRankingsDialog, setShowRankingsDialog] = useState(false); // Genel sıralama dialogu kontrolü
   const [showPersonalRankingsDialog, setShowPersonalRankingsDialog] = useState(false); // Bireysel sıralama dialogu kontrolü
   const [completedPlayers, setCompletedPlayers] = useState([]);
   const [hasCompletedBingo, setHasCompletedBingo] = useState(false);
-
-
   const playSound = (sound) => {
     if (soundEnabled) {
       sound.currentTime = 0;
@@ -94,6 +92,10 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     }
   };
 
+  const isCurrentUserHost = useMemo(() => {
+    return members.some(member => member.isHost && String(member.id) === String(currentUser?.id));
+  }, [members, currentUser]);
+  
   useEffect(() => {
     if (!socket) return;
 
@@ -107,7 +109,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
 
     const handleMessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data);
       switch (data.type) {
         case "BINGO_JOIN":
           setGameState((prev) => ({
@@ -286,6 +287,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     socket.addEventListener("message", handleMessage);
     return () => socket.removeEventListener("message", handleMessage);
   }, [socket, lobbyCode, currentUser, members]);
+  
 
   const handleMarkNumber = (number) => {
     playSound(matchSoundAudio);
@@ -314,8 +316,19 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     setOpenStartDialog(false);
   };
 
-  // Manuel sayı çekimi için:
   const drawNumber = () => {
+    if (gameState.drawMode === 'manual' && gameState.bingoMode === "superfast") {
+      setIsDrawButtonDisabled(true);
+      setTimeout(() => {
+        setIsDrawButtonDisabled(false);
+      }, 3000); // Disable for 3 seconds in superfast mode
+    } else if (gameState.drawMode === 'manual' && (gameState.bingoMode === "extended" || gameState.bingoMode === "classic")) {
+      setIsDrawButtonDisabled(true);
+      setTimeout(() => {
+        setIsDrawButtonDisabled(false);
+      }, 5000); // Default for classic/extended manual
+    }
+
     socket.send(
       JSON.stringify({
         type: "BINGO_DRAW",
@@ -323,7 +336,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
       })
     );
   };
-
   const callBingo = () => {
     socket.send(
       JSON.stringify({
@@ -371,12 +383,14 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     setCompletedPlayers([]); 
     setHasCompletedBingo(false);
   };
+
+
   return (
     <Container maxWidth="100%" style={{ width: '100%',height:'100%'}}>
 
         <CardContent sx={{ p: 3 }}>
           <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-            {!gameState.gameStarted && members[0]?.id === currentUser?.id && (
+            {!gameState.gameStarted && isCurrentUserHost && (
               <Button
                 variant="contained"
                 color="success"
@@ -407,7 +421,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
                   color="info"
                   onClick={drawNumber}
                   sx={{ py: 1.5, px: 4, borderRadius: 2 }}
-                  disabled={gameState.gameEnded} // Oyun bittikten sonra sayı çekilemesin
+                  disabled={gameState.gameEnded || isDrawButtonDisabled}
                 >
                   Draw Number
                 </Button>
@@ -435,8 +449,9 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
                 currentNumber={gameState.currentNumber}
                 theme={theme}
                 manualMode={gameState.drawMode === "manual"}
+                bingoMode={gameState.bingoMode}
               />
-              <ActiveNumbers activeNumbers={gameState.activeNumbers} />
+              <ActiveNumbers activeNumbers={gameState.activeNumbers} bingoMode={gameState.bingoMode}/>
             </Box>
           </Box>
 
@@ -453,7 +468,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     </span>
   ))}
 </Typography>
-{console.log(completedPlayers)}
           {hasCompletedBingo && (
           <div className="completion-message">
             Tebrikler! Bingo'yu tamamladınız!

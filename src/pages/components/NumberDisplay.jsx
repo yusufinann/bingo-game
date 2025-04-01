@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Typography, Zoom } from '@mui/material';
+import { Paper, Typography, Zoom, Box } from '@mui/material'; // Import Box
 
-const NumberDisplay = ({ currentNumber, theme, manualMode = false }) => {
-  // "active" durumu: sayı çekildiğinde aktif (parlak) olarak gösterilir,
-  // aktif süresi bitince (örneğin 5 saniye sonra) aktif false olur.
-  const [active, setActive] = useState(true);
+const NumberDisplay = ({ currentNumber, theme, manualMode = false, bingoMode }) => {
+  const [activeDisplay, setActiveDisplay] = useState(false);
 
   useEffect(() => {
     if (currentNumber) {
-      setActive(true);
-      const timer = setTimeout(() => {
-        setActive(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [currentNumber]);
+      setActiveDisplay(true);
+      let displayTime = 5000;
 
-  // Eğer sayı yoksa hiçbir şey gösterme.
-  if (!currentNumber) return null;
-  // Eğer otomatik modda (manualMode false) ve süre dolduysa, sayıyı kaldır.
-  if (!manualMode && !active) return null;
+      if (bingoMode === 'extended') {
+        displayTime = 5000;
+      } else if (bingoMode === 'superfast') {
+        displayTime = 3000;
+      }
+
+      const timer = setTimeout(() => {
+        setActiveDisplay(false);
+      }, displayTime);
+      return () => clearTimeout(timer);
+    } else {
+      setActiveDisplay(false);
+    }
+  }, [currentNumber, bingoMode]);
 
   return (
-    <Zoom in={true}>
-      <Paper 
+    <Zoom in={activeDisplay}>
+      <Paper
         elevation={6}
         sx={{
           width: 120,
@@ -37,7 +40,7 @@ const NumberDisplay = ({ currentNumber, theme, manualMode = false }) => {
           justifyContent: 'center',
           background: theme.palette.primary.main,
           color: 'white',
-          opacity: manualMode && !active ? 0.5 : 1,
+          opacity: manualMode && !activeDisplay ? 0.5 : 1,
           transition: 'opacity 0.5s ease',
           position: 'relative',
           '&::after': {
@@ -50,14 +53,19 @@ const NumberDisplay = ({ currentNumber, theme, manualMode = false }) => {
             borderRadius: '50%',
             border: '2px solid',
             borderColor: 'primary.light',
-            // Yalnızca aktifken pulsasyon efekti verilsin.
-            animation: active ? 'pulse 1.5s infinite' : 'none'
+            animation: activeDisplay ? 'pulse 1.5s infinite' : 'none'
           }
         }}
       >
-        <Typography variant="h2">
-          {currentNumber}
-        </Typography>
+        <Box  // Use Box to control visibility of Typography
+          sx={{
+            visibility: activeDisplay && currentNumber ? 'visible' : 'hidden', // Control visibility
+          }}
+        >
+          <Typography variant="h2">
+            {currentNumber}
+          </Typography>
+        </Box>
       </Paper>
     </Zoom>
   );

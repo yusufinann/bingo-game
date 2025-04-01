@@ -1,51 +1,39 @@
-import React, { useState } from 'react';
-import { Stack, Chip, Button } from '@mui/material';
+import React from 'react';
+import { Typography, Box } from '@mui/material';
 
-const ActiveNumbers = ({ activeNumbers }) => {
-  const [page, setPage] = useState(1);
-  const numbersPerPage = 3;
-
-  if (!activeNumbers || activeNumbers.length === 0) {
-    return null; // veya boş dizi için başka bir şey döndürebilirsiniz
+const ActiveNumbers = ({ activeNumbers, bingoMode }) => {
+  if (bingoMode === 'classic' || bingoMode === 'superfast' || !activeNumbers || activeNumbers.length === 0) {
+    return null;
   }
 
-  const totalPages = Math.ceil(activeNumbers.length / numbersPerPage);
-  const startIndex = (page - 1) * numbersPerPage;
-  const endIndex = startIndex + numbersPerPage;
-  const displayedNumbers = activeNumbers.slice(startIndex, endIndex);
-
-  const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage(page + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (page > 1) {
-      setPage(page - 1);
-    }
-  };
-
   return (
-    <div>
-      <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
-        {displayedNumbers.map((num, index) => (
-          <Chip key={index} label={num} color="primary" />
+    <>
+      <Typography variant="h6" gutterBottom>
+        Active Numbers
+      </Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
+        {activeNumbers.map((num, index) => (
+          <Box
+            key={index}
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              backgroundColor: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              boxShadow: 3,
+            }}
+          >
+            {num}
+          </Box>
         ))}
-      </Stack>
-
-      {totalPages > 1 && (
-        <Stack direction="row" spacing={2} justifyContent="center">
-          <Button onClick={handlePrevPage} disabled={page === 1}>
-            Önceki
-          </Button>
-          <span>{page} / {totalPages}</span>
-          <Button onClick={handleNextPage} disabled={page === totalPages}>
-            Sonraki
-          </Button>
-        </Stack>
-      )}
-    </div>
+      </Box>
+    </>
   );
 };
 

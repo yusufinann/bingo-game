@@ -75,7 +75,7 @@ const StartGameDialog = ({
               label="Extended Time Mode (Easy Mode) 🕒" 
             />
             <FormControlLabel 
-              value="fast" 
+              value="superfast" 
               control={<Radio />} 
               label="Super Fast Bingo (Hard Mode) ⚡" 
             />
