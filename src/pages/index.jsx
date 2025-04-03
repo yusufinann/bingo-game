@@ -1,4 +1,8 @@
-import React from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+} from "react";
 import {
   Box,
   CardContent,
@@ -13,10 +17,13 @@ import {
   TableCell,
   TableRow,
   TableHead,
+  IconButton,
 } from "@mui/material";
 import {
   Casino as CasinoIcon,
   EmojiEvents as TrophyIcon,
+  VolumeUp as VolumeUpIcon,
+  VolumeOff as VolumeOffIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 
@@ -27,7 +34,8 @@ import WinnerDialog from "./components/WinnerDialog";
 import NotificationSnackbar from "./components/NotificationSnackbar";
 import Countdown from "./components/Countdown";
 import ActiveNumbers from "./components/ActiveNumbers";
-import RankingsDialog from "./components/RankingsDialog"; 
+import RankingsDialog from "./components/RankingsDialog";
+import StartGameDialog from "./components/StartGameDialog";
 
 // İlgili ses dosyaları:
 import bingoWinSound from "../assets/bingo-win-sound.wav";
@@ -35,14 +43,11 @@ import gameStartAudioSrc from "../assets/game-start.mp3";
 import drawNumberSound from "../assets/draw-number.mp3";
 import matchSound from "../assets/matchSound.mp3";
 import wrongBingoSound from "../assets/wrong-bingo.mp3";
-import StartGameDialog from "./components/StartGameDialog";
-import { useState, useEffect, useMemo } from "react";
 
-const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
+const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEnabled, toggleSound, soundEnabledRef }) => {
   const theme = useTheme();
-
   const [gameState, setGameState] = useState({
-    gameId: null, 
+    gameId: null,
     ticket: [],
     drawnNumbers: [],
     activeNumbers: [],
@@ -50,15 +55,15 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     gameStarted: false,
     gameEnded: false,
     winner: null,
-    players: [], 
+    players: [],
     message: "",
     drawMode: "auto",
     drawer: null,
     bingoMode: "classic",
-    rankings: [], 
+    rankings: [],
   });
   const [markedNumbers, setMarkedNumbers] = useState([]);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -82,21 +87,26 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
   const [isDrawButtonDisabled, setIsDrawButtonDisabled] = useState(false);
 
   const [showRankingsDialog, setShowRankingsDialog] = useState(false); // Genel sıralama dialogu kontrolü
-  const [showPersonalRankingsDialog, setShowPersonalRankingsDialog] = useState(false); // Bireysel sıralama dialogu kontrolü
+  const [showPersonalRankingsDialog, setShowPersonalRankingsDialog] =
+    useState(false); // Bireysel sıralama dialogu kontrolü
   const [completedPlayers, setCompletedPlayers] = useState([]);
   const [hasCompletedBingo, setHasCompletedBingo] = useState(false);
-  const [competitionMode, setCompetitionMode] = useState("competitive"); 
+  const [competitionMode, setCompetitionMode] = useState("competitive");
+
   const playSound = (sound) => {
-    if (soundEnabled) {
+    //console.log("soundEnabledRef:", soundEnabledRef.current);
+    if (soundEnabledRef.current) {
       sound.currentTime = 0;
       sound.play().catch((e) => console.log("Error playing sound:", e));
     }
   };
 
   const isCurrentUserHost = useMemo(() => {
-    return members.some(member => member.isHost && String(member.id) === String(currentUser?.id));
+    return members.some(
+      (member) => member.isHost && String(member.id) === String(currentUser?.id)
+    );
   }, [members, currentUser]);
-  
+
   useEffect(() => {
     if (!socket) return;
 
@@ -123,24 +133,23 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             drawMode: data.drawMode || "auto",
             drawer: data.drawer || null,
             rankings: data.rankings || [],
-            gameId: data.gameId, 
+            gameId: data.gameId,
           }));
           setCompletedPlayers(data.completedPlayers || []);
           setHasCompletedBingo(data.completedBingo || false);
-            // İşaretlenen numaraları da al
-            if (data.markedNumbers) {
-              setMarkedNumbers(data.markedNumbers);
-            }
+          if (data.markedNumbers) {
+            setMarkedNumbers(data.markedNumbers);
+          }
           setNotification({
             open: true,
             message: "Successfully joined the Bingo game!",
             severity: "success",
           });
           break;
-         case "BINGO_NUMBER_MARKED":
-         if (data.playerId === currentUser?.id) {
-          setMarkedNumbers(data.markedNumbers);
-        }
+        case "BINGO_NUMBER_MARKED":
+          if (data.playerId === currentUser?.id) {
+            setMarkedNumbers(data.markedNumbers);
+          }
           break;
         case "BINGO_PLAYER_JOINED":
           setGameState((prev) => ({
@@ -161,29 +170,31 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
           setGameState((prev) => ({
             ...prev,
             gameStarted: true,
-            gameEnded:false,
+            gameEnded: false,
             message: data.message,
             drawMode: data.drawMode || "auto",
             drawer: data.drawer || null,
             bingoMode: data.bingoMode || "classic",
-            rankings: [],      // Oyun başladığında sıralamayı sıfırla
-            drawnNumbers: [], // **EKLE veya KONTROL ET: Çekilen numaraları sıfırlıyor muyuz?**
-           activeNumbers: [], // **EKLE veya KONTROL ET: Aktif numaraları sıfırlıyor muyuz?**
-           gameId: data.gameId, // gameId'yi state'e kaydet
-           competitionMode: data.competitionMode || 'competitive',
+            rankings: [],
+            drawnNumbers: [],
+            activeNumbers: [],
+            gameId: data.gameId,
+            competitionMode: data.competitionMode || "competitive",
           }));
-          setMarkedNumbers([]); // Reset marked numbers on game start
-          setCompletedPlayers([]); // Reset completed players on game start
-          setHasCompletedBingo(false); // Reset completed bingo status on game start
-
-               // Update ticket from the BINGO_STARTED message
-               if (data.players) {
-                const myPlayerData = data.players.find(p => p.playerId === currentUser?.id);
-                if (myPlayerData && myPlayerData.ticket) {
-                  setGameState(prev => ({ ...prev, ticket: myPlayerData.ticket }));
-                }
-              }
-
+          setMarkedNumbers([]);
+          setCompletedPlayers([]);
+          setHasCompletedBingo(false);
+          if (data.players) {
+            const myPlayerData = data.players.find(
+              (p) => p.playerId === currentUser?.id
+            );
+            if (myPlayerData && myPlayerData.ticket) {
+              setGameState((prev) => ({
+                ...prev,
+                ticket: myPlayerData.ticket,
+              }));
+            }
+          }
           setNotification({
             open: true,
             message: "Game has started!",
@@ -206,7 +217,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             activeNumbers: data.activeNumbers,
           }));
           break;
-        case "BINGO_WIN": 
+        case "BINGO_WIN":
           setGameState((prev) => ({
             ...prev,
             gameEnded: true,
@@ -233,44 +244,43 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
           break;
         case "BINGO_CALL_SUCCESS":
           setCompletedPlayers(data.completedPlayers || []);
-            setNotification({
-              open: true,
-              message: `${data.playerName} got Bingo! (Rank: ${data.rank})`,
-              severity: "success"
-            });
-            setGameState(prev => ({
-              ...prev,
-              rankings: data.rankings, // Sıralamaları güncelle
-            }));
-            if (String(data.playerId) === String(currentUser?.id)) {
-              setShowPersonalRankingsDialog(true); // Sadece bingo yapan oyuncuya dialog göster
-              setHasCompletedBingo(true);      // Eğer bu oyuncu bingo yaptıysa, tamamlandı olarak işaretle
-            }
-            setCompletedPlayers(data.completedPlayers || []);
-            if (data.gameEnded) {
-              setShowRankingsDialog(true); // Genel sıralama dialogunu oyun sonunda göster
-            }
-
-            break;
-            case "BINGO_GAME_STATUS":
-              setCompletedPlayers(data.completedPlayers || []);
-              if (data.completedPlayers && data.completedPlayers.includes(currentUser?.id)) {
-                setHasCompletedBingo(true);
-              }
-              break;
-
-          case "BINGO_GAME_OVER":
-            setGameState(prev => ({
-              ...prev,
-              gameEnded: true,
-              gameStarted: false,
-              rankings: data.finalRankings, 
-            }));
-            setShowRankingsDialog(true); // Oyun bittiğinde genel sıralama dialogunu göster
-            setShowPersonalRankingsDialog(false); // Bireysel sıralama dialogunu kapat
-            break;
-
-
+          setNotification({
+            open: true,
+            message: `${data.playerName} got Bingo! (Rank: ${data.rank})`,
+            severity: "success",
+          });
+          setGameState((prev) => ({
+            ...prev,
+            rankings: data.rankings,
+          }));
+          if (String(data.playerId) === String(currentUser?.id)) {
+            setShowPersonalRankingsDialog(true);
+            setHasCompletedBingo(true);
+          }
+          setCompletedPlayers(data.completedPlayers || []);
+          if (data.gameEnded) {
+            setShowRankingsDialog(true);
+          }
+          break;
+        case "BINGO_GAME_STATUS":
+          setCompletedPlayers(data.completedPlayers || []);
+          if (
+            data.completedPlayers &&
+            data.completedPlayers.includes(currentUser?.id)
+          ) {
+            setHasCompletedBingo(true);
+          }
+          break;
+        case "BINGO_GAME_OVER":
+          setGameState((prev) => ({
+            ...prev,
+            gameEnded: true,
+            gameStarted: false,
+            rankings: data.finalRankings,
+          }));
+          setShowRankingsDialog(true);
+          setShowPersonalRankingsDialog(false);
+          break;
         case "BINGO_ERROR":
           setNotification({
             open: true,
@@ -278,7 +288,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
             severity: "error",
           });
           break;
-
         default:
           break;
       }
@@ -287,47 +296,50 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     socket.addEventListener("message", handleMessage);
     return () => socket.removeEventListener("message", handleMessage);
   }, [socket, lobbyCode, currentUser, members]);
-  
 
   const handleMarkNumber = (number) => {
     playSound(matchSoundAudio);
     setMarkedNumbers((prev) => [...prev, number]);
-      // Sunucuya bildir
-      socket.send(
-        JSON.stringify({
-          type: "BINGO_MARK_NUMBER",
-          lobbyCode,
-          number
-        })
-      );
+    socket.send(
+      JSON.stringify({
+        type: "BINGO_MARK_NUMBER",
+        lobbyCode,
+        number,
+      })
+    );
   };
 
-  // Host dialog üzerinden seçim yaptıktan sonra çağrılır:
   const startGameWithOptions = () => {
     socket.send(
       JSON.stringify({
         type: "BINGO_START",
         lobbyCode,
-        drawMode, // "auto" veya "manual"
+        drawMode,
         drawer: drawMode === "manual" ? selectedDrawer : null,
-        bingoMode: selectedBingoMode, // "classic", "extended" veya "fast"
-        competitionMode: competitionMode, 
+        bingoMode: selectedBingoMode,
+        competitionMode: competitionMode,
       })
     );
     setOpenStartDialog(false);
   };
 
   const drawNumber = () => {
-    if (gameState.drawMode === 'manual' && gameState.bingoMode === "superfast") {
+    if (
+      gameState.drawMode === "manual" &&
+      gameState.bingoMode === "superfast"
+    ) {
       setIsDrawButtonDisabled(true);
       setTimeout(() => {
         setIsDrawButtonDisabled(false);
-      }, 3000); // Disable for 3 seconds in superfast mode
-    } else if (gameState.drawMode === 'manual' && (gameState.bingoMode === "extended" || gameState.bingoMode === "classic")) {
+      }, 3000);
+    } else if (
+      gameState.drawMode === "manual" &&
+      (gameState.bingoMode === "extended" || gameState.bingoMode === "classic")
+    ) {
       setIsDrawButtonDisabled(true);
       setTimeout(() => {
         setIsDrawButtonDisabled(false);
-      }, 5000); // Default for classic/extended manual
+      }, 5000);
     }
 
     socket.send(
@@ -337,6 +349,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
       })
     );
   };
+
   const callBingo = () => {
     socket.send(
       JSON.stringify({
@@ -354,6 +367,22 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
     setWinnerDetails(null);
   };
 
+  const onGameReset = () => {
+    setGameState((prev) => ({
+      ...prev,
+      gameStarted: false,
+      gameEnded: false,
+      drawnNumbers: [],
+      activeNumbers: [],
+      currentNumber: null,
+      winner: null,
+      rankings: [],
+    }));
+    setMarkedNumbers([]);
+    setCompletedPlayers([]);
+    setHasCompletedBingo(false);
+  };
+
   if (!socket) {
     return (
       <Box
@@ -369,116 +398,133 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
       </Box>
     );
   }
-  const onGameReset = () => {
-    setGameState(prev => ({
-      ...prev,
-      gameStarted: false,
-      gameEnded: false,
-      drawnNumbers: [],
-      activeNumbers: [],
-      currentNumber: null,
-      winner: null,
-      rankings: [],
-    }));
-    setMarkedNumbers([]);
-    setCompletedPlayers([]); 
-    setHasCompletedBingo(false);
-  };
-
 
   return (
-    <Container maxWidth="100%" style={{ width: '100%',height:'100%'}}>
-
-        <CardContent sx={{ p: 3 }}>
-          <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-            {!gameState.gameStarted && isCurrentUserHost && (
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={<CasinoIcon />}
-                onClick={() => setOpenStartDialog(true)}
-                disabled={members.length < 2}
-                sx={{ py: 1.5, px: 4, borderRadius: 2 }}
-              >
-                Start Game ({members.length}/{lobbyInfo.maxMembers})
-              </Button>
-            )}
+    <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
+      <CardContent sx={{ p: 3 }}>
+        <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+          {!gameState.gameStarted && isCurrentUserHost && (
             <Button
               variant="contained"
-              color="warning"
-              startIcon={<TrophyIcon />}
-              onClick={callBingo}
+              color="success"
+              startIcon={<CasinoIcon />}
+              onClick={() => setOpenStartDialog(true)}
+              disabled={members.length < 2}
               sx={{ py: 1.5, px: 4, borderRadius: 2 }}
-              disabled={gameState.gameEnded ||hasCompletedBingo} // Oyun bittikten sonra veya sıralama dialogu açıkken bingo çağrısı yapılamasın
             >
-               {hasCompletedBingo ? "Bingo Tamamlandı" : "Call Bingo!"}
+              Start Game ({members.length}/{lobbyInfo.maxMembers})
             </Button>
-            {gameState.gameStarted &&
-             !gameState.gameEnded &&  // Oyun bitmemişse göster
-              gameState.drawMode === "manual" &&
-              String(gameState.drawer) === String(currentUser?.id) && (
-                <Button
-                  variant="contained"
-                  color="info"
-                  onClick={drawNumber}
-                  sx={{ py: 1.5, px: 4, borderRadius: 2 }}
-                  disabled={gameState.gameEnded || isDrawButtonDisabled}
-                >
-                  Draw Number
-                </Button>
-              )}
-          </Stack>
-
-          <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginBottom: 4 }}>
-            <Box sx={{ flex: '3', width: '60vw'}}> 
-              <Typography
-                variant="h6"
-                sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+          )}
+          <Button
+            variant="contained"
+            color="warning"
+            startIcon={<TrophyIcon />}
+            onClick={callBingo}
+            sx={{ py: 1.5, px: 4, borderRadius: 2 }}
+            disabled={gameState.gameEnded || hasCompletedBingo}
+          >
+            {hasCompletedBingo ? "Bingo Tamamlandı" : "Call Bingo!"}
+          </Button>
+          {gameState.gameStarted &&
+            !gameState.gameEnded &&
+            gameState.drawMode === "manual" &&
+            String(gameState.drawer) === String(currentUser?.id) && (
+              <Button
+                variant="contained"
+                color="info"
+                onClick={drawNumber}
+                sx={{ py: 1.5, px: 4, borderRadius: 2 }}
+                disabled={gameState.gameEnded || isDrawButtonDisabled}
               >
-                <TrophyIcon color="primary" />
-                Your Ticket
-              </Typography>
-              <Ticket
-                ticket={gameState.ticket}
-                markedNumbers={markedNumbers}
-                activeNumbers={gameState.activeNumbers}
-                onMarkNumber={handleMarkNumber}
-              />
-            </Box>
-            <Box sx={{ flex: '1', width: '40vw' }}> {/* Number Display Box */}
-              <NumberDisplay
-                currentNumber={gameState.currentNumber}
-                theme={theme}
-                manualMode={gameState.drawMode === "manual"}
-                bingoMode={gameState.bingoMode}
-              />
-              <ActiveNumbers activeNumbers={gameState.activeNumbers} bingoMode={gameState.bingoMode}/>
-            </Box>
+                Draw Number
+              </Button>
+            )}
+          <IconButton
+            color="primary"
+            onClick={toggleSound}
+            aria-label={soundEnabled ? "Sesi kapat" : "Sesi aç"}
+          >
+            {soundEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
+          </IconButton>
+        </Stack>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 3,
+            marginBottom: 4,
+          }}
+        >
+          <Box sx={{ flex: "3", width: "60vw" }}>
+            <Typography
+              variant="h6"
+              sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <TrophyIcon color="primary" />
+              Your Ticket
+            </Typography>
+            <Ticket
+              ticket={gameState.ticket}
+              markedNumbers={markedNumbers}
+              activeNumbers={gameState.activeNumbers}
+              onMarkNumber={handleMarkNumber}
+            />
           </Box>
+          <Box sx={{ flex: "1", width: "40vw" }}>
+            <NumberDisplay
+              currentNumber={gameState.currentNumber}
+              theme={theme}
+              manualMode={gameState.drawMode === "manual"}
+              bingoMode={gameState.bingoMode}
+            />
+            <ActiveNumbers
+              activeNumbers={gameState.activeNumbers}
+              bingoMode={gameState.bingoMode}
+            />
+          </Box>
+        </Box>
 
-
-          <DrawnNumbers drawnNumbers={gameState.drawnNumbers} />
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1, mb: 2 }}>
-            {gameState.drawnNumbers.length}/{90} Drawn Numbers
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>
-  Tamamlayan Oyuncular ({completedPlayers.length}):{" "}
-  {completedPlayers.map((player, index) => (
-    <span key={player.id}>
-      {player.userName}{index < completedPlayers.length - 1 ? ", " : ""}
-    </span>
-  ))}
-</Typography>
-          {hasCompletedBingo && (
+        <DrawnNumbers drawnNumbers={gameState.drawnNumbers} />
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          align="center"
+          sx={{ mt: 1, mb: 2 }}
+        >
+          {gameState.drawnNumbers.length}/{90} Drawn Numbers
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          Tamamlayan Oyuncular ({completedPlayers.length}):{" "}
+          {completedPlayers.map((player, index) => (
+            <span key={player.id}>
+              {player.userName}
+              {index < completedPlayers.length - 1 ? ", " : ""}
+            </span>
+          ))}
+        </Typography>
+        {hasCompletedBingo && (
           <div className="completion-message">
             Tebrikler! Bingo'yu tamamladınız!
           </div>
         )}
 
-          {/* Real-time Rankings Display */}
-          {gameState.gameStarted && !gameState.gameEnded && gameState.rankings.length > 0 && (
-            <Paper elevation={3} sx={{ p: 2, mt: 4, borderRadius: 2, bgcolor: "background.default" }}>
-              <Typography variant="h6" sx={{ mb: 1 }}>Current Rankings</Typography>
+        {gameState.gameStarted &&
+          !gameState.gameEnded &&
+          gameState.rankings.length > 0 && (
+            <Paper
+              elevation={3}
+              sx={{
+                p: 2,
+                mt: 4,
+                borderRadius: 2,
+                bgcolor: "background.default",
+              }}
+            >
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Current Rankings
+              </Typography>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -499,9 +545,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
               </Table>
             </Paper>
           )}
-
-
-        </CardContent>
+      </CardContent>
 
       <NotificationSnackbar
         open={notification.open}
@@ -517,7 +561,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
       />
       <Countdown countdown={countdown} />
 
-      {/* Start Game Dialog */}
       <StartGameDialog
         open={openStartDialog}
         onClose={() => setOpenStartDialog(false)}
@@ -533,17 +576,16 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
         setCompetitionMode={setCompetitionMode}
       />
 
-
       <RankingsDialog
         open={showRankingsDialog}
         onClose={() => setShowRankingsDialog(false)}
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
-        onGameReset={onGameReset} 
-        gameId={gameState.gameId} 
+        onGameReset={onGameReset}
+        gameId={gameState.gameId}
       />
-       <RankingsDialog // Personal Rankings Dialog - Only shows for the player who called Bingo
+      <RankingsDialog
         open={showPersonalRankingsDialog}
         onClose={() => setShowPersonalRankingsDialog(false)}
         rankings={gameState.rankings}
@@ -552,34 +594,32 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser }) => {
         dialogTitle="Your Rank"
         showCloseButton={true}
         onGameReset={onGameReset}
-        gameId={gameState.gameId} 
+        gameId={gameState.gameId}
       />
 
       <style>
-        {
-          `
-          @keyframes pulse {
-            0% {
-              box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
-            }
-            70% {
-              box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
-            }
-            100% {
-              box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-            }
+        {`
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
           }
-
-          @keyframes bounce {
-            0% {
-              transform: translateY(0);
-            }
-            100% {
-              transform: translateY(-10px);
-            }
+          70% {
+            box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
           }
-        `
+          100% {
+            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+          }
         }
+
+        @keyframes bounce {
+          0% {
+            transform: translateY(0);
+          }
+          100% {
+            transform: translateY(-10px);
+          }
+        }
+      `}
       </style>
     </Container>
   );
