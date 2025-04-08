@@ -20,7 +20,6 @@ import {
   IconButton,
 } from "@mui/material";
 import {
-  Casino as CasinoIcon,
   EmojiEvents as TrophyIcon,
   VolumeUp as VolumeUpIcon,
   VolumeOff as VolumeOffIcon,
@@ -35,7 +34,7 @@ import NotificationSnackbar from "./components/NotificationSnackbar";
 import Countdown from "./components/Countdown";
 import ActiveNumbers from "./components/ActiveNumbers";
 import RankingsDialog from "./components/RankingsDialog";
-import StartGameDialog from "./components/StartGameDialog";
+import BingoGameWaiting from "./components/BingoGameWaiting";
 
 // İlgili ses dosyaları:
 import bingoWinSound from "../assets/bingo-win-sound.wav";
@@ -44,7 +43,7 @@ import drawNumberSound from "../assets/draw-number.mp3";
 import matchSound from "../assets/matchSound.mp3";
 import wrongBingoSound from "../assets/wrong-bingo.mp3";
 
-const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEnabled, toggleSound, soundEnabledRef }) => {
+const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEnabled, toggleSound, soundEnabledRef }) => {
   const theme = useTheme();
   const [gameState, setGameState] = useState({
     gameId: null,
@@ -94,7 +93,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEna
   const [competitionMode, setCompetitionMode] = useState("competitive");
 
   const playSound = (sound) => {
-    //console.log("soundEnabledRef:", soundEnabledRef.current);
     if (soundEnabledRef.current) {
       sound.currentTime = 0;
       sound.play().catch((e) => console.log("Error playing sound:", e));
@@ -275,7 +273,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEna
           setGameState((prev) => ({
             ...prev,
             gameEnded: true,
-            gameStarted: false,
             rankings: data.finalRankings,
           }));
           setShowRankingsDialog(true);
@@ -370,7 +367,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEna
   const onGameReset = () => {
     setGameState((prev) => ({
       ...prev,
-      gameStarted: false,
+      gameStarted: false, // Set gameStarted to false here to go back to waiting screen
       gameEnded: false,
       drawnNumbers: [],
       activeNumbers: [],
@@ -381,6 +378,8 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEna
     setMarkedNumbers([]);
     setCompletedPlayers([]);
     setHasCompletedBingo(false);
+    setShowRankingsDialog(false); // Also close the ranking dialog when resetting.
+    setShowPersonalRankingsDialog(false); // Close personal ranking dialog as well.
   };
 
   if (!socket) {
@@ -399,22 +398,47 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEna
     );
   }
 
+  // Render the waiting component if the game hasn't started
+  if (!gameState.gameStarted) {
+    return (
+      <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
+        <BingoGameWaiting
+          members={members}
+          lobbyInfo={lobbyInfo}
+          isCurrentUserHost={isCurrentUserHost}
+          openStartDialog={openStartDialog}
+          setOpenStartDialog={setOpenStartDialog}
+          drawMode={drawMode}
+          setDrawMode={setDrawMode}
+          selectedDrawer={selectedDrawer}
+          setSelectedDrawer={setSelectedDrawer}
+          selectedBingoMode={selectedBingoMode}
+          setSelectedBingoMode={setSelectedBingoMode}
+          startGameWithOptions={startGameWithOptions}
+          competitionMode={competitionMode}
+          setCompetitionMode={setCompetitionMode}
+          currentUser={currentUser}
+        />
+
+        {/* Show the countdown even in waiting state */}
+        <Countdown countdown={countdown} />
+
+        {/* Keep notification system active */}
+        <NotificationSnackbar
+          open={notification.open}
+          message={notification.message}
+          severity={notification.severity}
+          onClose={handleCloseNotification}
+        />
+      </Container>
+    );
+  }
+
+  // Render the main game interface once the game has started
   return (
     <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
       <CardContent sx={{ p: 3 }}>
         <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-          {!gameState.gameStarted && isCurrentUserHost && (
-            <Button
-              variant="contained"
-              color="success"
-              startIcon={<CasinoIcon />}
-              onClick={() => setOpenStartDialog(true)}
-              disabled={members.length < 2}
-              sx={{ py: 1.5, px: 4, borderRadius: 2 }}
-            >
-              Start Game ({members.length}/{lobbyInfo.maxMembers})
-            </Button>
-          )}
           <Button
             variant="contained"
             color="warning"
@@ -561,24 +585,9 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser,soundEna
       />
       <Countdown countdown={countdown} />
 
-      <StartGameDialog
-        open={openStartDialog}
-        onClose={() => setOpenStartDialog(false)}
-        drawMode={drawMode}
-        setDrawMode={setDrawMode}
-        selectedDrawer={selectedDrawer}
-        setSelectedDrawer={setSelectedDrawer}
-        selectedBingoMode={selectedBingoMode}
-        setSelectedBingoMode={setSelectedBingoMode}
-        members={members}
-        onStartGame={startGameWithOptions}
-        competitionMode={competitionMode}
-        setCompetitionMode={setCompetitionMode}
-      />
-
       <RankingsDialog
         open={showRankingsDialog}
-        onClose={() => setShowRankingsDialog(false)}
+        onClose={onGameReset} // Use onGameReset to reset game and go to waiting screen
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
