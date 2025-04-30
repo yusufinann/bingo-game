@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
   Box,
   CardContent,
@@ -14,7 +14,7 @@ import {
   VolumeUp as VolumeUpIcon,
   VolumeOff as VolumeOffIcon,
 } from "@mui/icons-material";
-import { useTheme } from "@mui/material/styles";
+import {useTheme } from "@mui/material/styles";
 
 // Custom hooks
 import useBingoSocket from "../hooks/useBingoSocket";
@@ -73,7 +73,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
     onGameReset,
     closeWinnerDialog,
     handleCloseNotification,
-    setShowRankingsDialog,
     setShowPersonalRankingsDialog
   } = useBingoSocket({
     socket,
@@ -163,7 +162,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
             color="warning"
             startIcon={<TrophyIcon />}
             onClick={callBingo}
-            sx={{ py: 1.5, px: 4, borderRadius: 2 }}
+            sx={{ py: 1.5, px: 4, borderRadius: 2}}
             disabled={gameState.gameEnded || hasCompletedBingo}
           >
             {hasCompletedBingo ? "Bingo Tamamlandı" : "Call Bingo!"}
@@ -176,8 +175,10 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
                 variant="contained"
                 color="info"
                 onClick={drawNumber}
-                sx={{ py: 1.5, px: 4, borderRadius: 2 }}
+                sx={{ py: 1.5, px: 4, borderRadius: 2 ,
+                }}
                 disabled={gameState.gameEnded || isDrawButtonDisabled}
+                
               >
                 Draw Number
               </Button>
@@ -268,7 +269,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
 
       <RankingsDialog
         open={showRankingsDialog}
-        onClose={onGameReset} // Use onGameReset to reset game and go to waiting screen
+        onClose={onGameReset} 
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
@@ -286,31 +287,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
         onGameReset={onGameReset}
         gameId={gameState.gameId}
       />
-
-      <style>
-        {`
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-          }
-        }
-
-        @keyframes bounce {
-          0% {
-            transform: translateY(0);
-          }
-          100% {
-            transform: translateY(-10px);
-          }
-        }
-      `}
-      </style>
     </Container>
   );
 };
