@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, IconButton, Typography, Container } from '@mui/material';
+import { Box, IconButton, Typography, Container, useTheme } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
-const DrawnNumbers= ({ drawnNumbers }) => {
+const DrawnNumbers = ({ drawnNumbers }) => {
+  const theme = useTheme();
   const [currentPage, setCurrentPage] = useState(0);
   const numbersPerPage = 10;
 
@@ -41,13 +42,18 @@ const DrawnNumbers= ({ drawnNumbers }) => {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 2,
-          my: 2 ,
+          my: 2,
         }}
       >
         <IconButton
           onClick={handlePrevPage}
           disabled={currentPage === 0}
-          color="primary"
+          sx={{
+            color: theme.palette.primary.main,
+            '&.Mui-disabled': {
+              color: theme.palette.text.disabled
+            }
+          }}
         >
           <ChevronLeft />
         </IconButton>
@@ -56,7 +62,9 @@ const DrawnNumbers= ({ drawnNumbers }) => {
           sx={{
             display: 'flex',
             gap: 1.5,
-            alignItems: 'center'
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: 'center'
           }}
         >
           {currentPageNumbers.map((number) => (
@@ -66,28 +74,54 @@ const DrawnNumbers= ({ drawnNumbers }) => {
                 width: 50,
                 height: 50,
                 borderRadius: '50%',
-                bgcolor: 'primary.main',
-                color: 'white',
+                bgcolor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 'bold',
-                boxShadow: 2,
-                transition: 'transform 0.2s ease',
+                boxShadow: theme.shadows[2],
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  transform: 'scale(1.05)'
+                  transform: 'scale(1.05)',
+                  boxShadow: theme.shadows[4],
+                  bgcolor: theme.palette.primary.dark || theme.palette.primary.main,
+                },
+                position: 'relative',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  border: `2px solid ${theme.palette.primary.light}`,
+                  top: 0,
+                  left: 0,
+                  opacity: 0.6,
+                  pointerEvents: 'none'
                 }
               }}
             >
-              {number}
+              <Typography 
+                variant="body1" 
+                fontWeight="bold"
+                sx={{ userSelect: 'none' }}
+              >
+                {number}
+              </Typography>
             </Box>
           ))}
         </Box>
 
         <IconButton
           onClick={handleNextPage}
-          disabled={currentPage === totalPages - 1 || totalPages <= 1} // Disable next button if on last page or only one page
-          color="primary"
+          disabled={currentPage === totalPages - 1 || totalPages <= 1}
+          sx={{
+            color: theme.palette.primary.main,
+            '&.Mui-disabled': {
+              color: theme.palette.text.disabled
+            }
+          }}
         >
           <ChevronRight />
         </IconButton>
@@ -96,9 +130,11 @@ const DrawnNumbers= ({ drawnNumbers }) => {
       {/* Page indicator */}
       <Typography
         variant="body2"
-        color="text.secondary"
-        align="center"
-        sx={{ mt: 1 }}
+        sx={{ 
+          mt: 1, 
+          textAlign: 'center',
+          color: theme.palette.text.secondary
+        }}
       >
         {totalPages > 0 ? `Page ${currentPage + 1} of ${totalPages}` : 'Page 1 of 1'}
       </Typography>

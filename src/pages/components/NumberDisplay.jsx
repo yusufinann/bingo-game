@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Typography, Zoom, Box } from '@mui/material';
+import { Paper, Typography, Zoom, Box, useTheme } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
 
-const pulseAnimation = keyframes`
-  0% {
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.6);
-  }
-  70% {
-    box-shadow: 0 0 0 12px rgba(76, 175, 80, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-  }
-`;
-
-const NumberDisplay = ({ currentNumber, theme, manualMode = false, bingoMode }) => {
+const NumberDisplay = ({ currentNumber, manualMode = false, bingoMode }) => {
+  const theme = useTheme();
   const [activeDisplay, setActiveDisplay] = useState(false);
+
+  // Create a dynamic pulse animation based on theme colors
+  const pulseAnimation = keyframes`
+    0% {
+      box-shadow: 0 0 0 0 ${theme.palette.primary.main}80;
+    }
+    70% {
+      box-shadow: 0 0 0 12px ${theme.palette.primary.main}00;
+    }
+    100% {
+      box-shadow: 0 0 0 0 ${theme.palette.primary.main}00;
+    }
+  `;
 
   useEffect(() => {
     if (currentNumber) {
@@ -59,15 +61,27 @@ const NumberDisplay = ({ currentNumber, theme, manualMode = false, bingoMode }) 
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: theme.palette.primary.main,
-          color: 'white',
+          bgcolor: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText,
           opacity: manualMode && !activeDisplay ? 0.5 : 1,
           transition: 'opacity 0.3s ease',
           position: 'relative',
           border: '3px solid',
           borderColor: theme.palette.primary.light,
           padding: 2,
-          ...animationStyle
+          ...animationStyle,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: -4,
+            left: -4,
+            right: -4,
+            bottom: -4,
+            borderRadius: '50%',
+            background: theme.palette.background.gradient,
+            zIndex: -1,
+            opacity: 0.4
+          }
         }}
       >
         <Box
@@ -78,9 +92,11 @@ const NumberDisplay = ({ currentNumber, theme, manualMode = false, bingoMode }) 
           }}
         >
           <Typography 
-            variant="h1"
+            variant="h2"
             sx={{
               fontWeight: 'bold',
+              textShadow: `0 2px 4px ${theme.palette.mode === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.4)'}`,
+              userSelect: 'none'
             }}
           >
             {currentNumber}

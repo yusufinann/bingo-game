@@ -36,8 +36,12 @@ import CompletedPlayers from "./components/CompletedPlayers";
 
 const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEnabled, toggleSound, soundEnabledRef }) => {
   const theme = useTheme();
+
+  const palette = theme.palette;
+  const textColors = palette.text;
+  const primaryColors = palette.primary;
+  const secondaryColors = palette.secondary;
   
-  // Initialize custom hooks
   const { playSound } = useBingoSound(soundEnabledRef);
   
   const {
@@ -83,13 +87,11 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
     playSoundCallback: playSound
   });
 
-  // Wrapper for draw number to handle cooldown
   const drawNumber = () => {
     handleDrawButton(gameState);
     socketDrawNumber();
   };
 
-  // Wrapper for start game to provide proper options
   const handleStartGame = () => {
     startGameWithOptions({
       drawMode,
@@ -116,7 +118,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
     );
   }
 
-  // Render the waiting component if the game hasn't started
   if (!gameState.gameStarted) {
     return (
       <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
@@ -138,10 +139,8 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
           currentUser={currentUser}
         />
 
-        {/* Show the countdown even in waiting state */}
         <Countdown countdown={countdown} />
 
-        {/* Keep notification system active */}
         <NotificationSnackbar
           open={notification.open}
           message={notification.message}
@@ -156,41 +155,67 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
   return (
     <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
       <CardContent sx={{ p: 3 }}>
-        <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+      <Stack 
+          direction="row" 
+          spacing={2} 
+          justifyContent="center" 
+          mb={2}
+        >
           <Button
             variant="contained"
             color="warning"
-            startIcon={<TrophyIcon />}
+            startIcon={<TrophyIcon sx={{ color: secondaryColors.gold }} />}
             onClick={callBingo}
-            sx={{ py: 1.5, px: 4, borderRadius: 2}}
+            sx={{ 
+              py: 1.5, 
+              px: 4, 
+              borderRadius: 2,
+              bgcolor: primaryColors.main,
+              '&:hover': {
+                bgcolor: primaryColors.dark
+              }
+            }}
             disabled={gameState.gameEnded || hasCompletedBingo}
           >
             {hasCompletedBingo ? "Bingo Tamamlandı" : "Call Bingo!"}
           </Button>
+
+          {/* Draw Number butonu için tema renkleri */}
           {gameState.gameStarted &&
             !gameState.gameEnded &&
             gameState.drawMode === "manual" &&
             String(gameState.drawer) === String(currentUser?.id) && (
               <Button
                 variant="contained"
-                color="info"
-                onClick={drawNumber}
-                sx={{ py: 1.5, px: 4, borderRadius: 2 ,
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  borderRadius: 2,
+                  bgcolor: secondaryColors.main,
+                  '&:hover': {
+                    bgcolor: secondaryColors.dark
+                  }
                 }}
+                onClick={drawNumber}
                 disabled={gameState.gameEnded || isDrawButtonDisabled}
-                
               >
                 Draw Number
               </Button>
             )}
+
           <IconButton
-            color="primary"
+            sx={{ color: textColors.primary }}
             onClick={toggleSound}
             aria-label={soundEnabled ? "Sesi kapat" : "Sesi aç"}
           >
-            {soundEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
+            {soundEnabled ? (
+              <VolumeUpIcon sx={{ color: secondaryColors.main }} />
+            ) : (
+              <VolumeOffIcon sx={{ color: textColors.disabled }} />
+            )}
           </IconButton>
         </Stack>
+
 
         <Box
           sx={{

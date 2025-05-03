@@ -1,25 +1,38 @@
 import React from 'react';
-import { Box, Grid, Paper, Typography } from '@mui/material';
+import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 
 const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber }) => {
-  // Her satır için boş/dolu pozisyonları tanımlama
+  const theme = useTheme();
+  
+  // Row patterns for ticket layout
   const rowPatterns = [
-    [true, false, true, false, true, false, true, true, false], // İlk satır
-    [true, true, false, true, false, true, false, true, false], // İkinci satır
-    [true, false, true, false, true, false, true, false, true]  // Üçüncü satır
+    [true, false, true, false, true, false, true, true, false], // First row
+    [true, true, false, true, false, true, false, true, false], // Second row
+    [true, false, true, false, true, false, true, false, true]  // Third row
   ];
 
   const renderTicket = () => {
     return rowPatterns.map((pattern, rowIndex) => {
       let numberIndex = 0;
-      const rowStart = rowIndex * 5; // Her satır için ticket array'inden başlangıç indexi
+      const rowStart = rowIndex * 5; // Starting index for each row from ticket array
 
       return (
-        <Grid container key={rowIndex} sx={{ mb: rowIndex < 2 ? 0 : 0 }}>
+        <Grid container key={rowIndex}>
           {pattern.map((hasNumber, cellIndex) => {
             const currentNumber = hasNumber ? ticket[rowStart + numberIndex++] : null;
             const isMarked = currentNumber && markedNumbers.includes(currentNumber);
             const isActive = currentNumber && activeNumbers.includes(currentNumber);
+
+            // Get appropriate colors based on theme
+            const cellBgColor = isMarked 
+              ? theme.palette.warning.main
+              : hasNumber 
+                ? theme.palette.primary.main
+                : theme.palette.background.paper;
+
+            const cellColor = hasNumber 
+              ? theme.palette.primary.contrastText 
+              : 'transparent';
 
             return (
               <Grid item xs key={cellIndex}>
@@ -35,22 +48,17 @@ const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber }
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '2px solid black',
+                    border: `2px solid ${theme.palette.primary.main}`,
                     borderRadius: 0,
-                    // bgcolor: isMarked ? '#1976d2' : 'white',
-                    // color: isMarked ? 'white' : '#1976d2',
-                     // Background color logic updated
-                     bgcolor: isMarked 
-                     ? '#4caf50' // Green when marked
-                     : hasNumber 
-                       ? '#1976d2' // Blue for true squares
-                       : 'white',  // White for false squares
-                   // Text color logic
-                   color: hasNumber ? 'white' : 'transparent',
-                
-                    cursor: 'default',
+                    bgcolor: cellBgColor,
+                    color: cellColor,
+                    cursor: isActive && !isMarked ? 'pointer' : 'default',
                     m: 0,
                     p: 0,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      opacity: isActive && !isMarked ? 0.9 : 1,
+                    }
                   }}
                 >
                   {currentNumber && (
@@ -75,17 +83,25 @@ const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber }
   };
 
   return (
-     <Box sx={{display: 'flex',backgroundColor:'orange'}}>
-    <Box
+    <Box 
       sx={{
-        width: '100%',
-        border: '2px solid #1976d2',
-        p: 0.5,
-        bgcolor: 'white'
+        display: 'flex',
+        backgroundColor: theme.palette.background.default,
+        borderRadius: 1,
+        overflow: 'hidden',
+        boxShadow: theme.shadows[2]
       }}
     >
-      {renderTicket()}
-    </Box>
+      <Box
+        sx={{
+          width: '100%',
+          border: `2px solid ${theme.palette.primary.main}`,
+          p: 0.5,
+          bgcolor: theme.palette.background.paper
+        }}
+      >
+        {renderTicket()}
+      </Box>
     </Box>
   );
 };
