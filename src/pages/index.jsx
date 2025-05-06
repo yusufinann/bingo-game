@@ -151,7 +151,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
     );
   }
 
-  // Render the main game interface once the game has started
   return (
     <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
       <CardContent sx={{ p: 3 }}>
@@ -177,7 +176,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
             }}
             disabled={gameState.gameEnded || hasCompletedBingo}
           >
-            {hasCompletedBingo ? "Bingo Tamamlandı" : "Call Bingo!"}
+            {hasCompletedBingo ? "Bingo Completed!" : "Call Bingo!"}
           </Button>
 
           {/* Draw Number butonu için tema renkleri */}
@@ -264,9 +263,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
         >
           {gameState.drawnNumbers.length}/{90} Drawn Numbers
         </Typography>
-        {hasCompletedBingo && (
           <CompletedPlayers completedPlayers={completedPlayers} />
-        )}
 
         {gameState.gameStarted &&
           !gameState.gameEnded &&
