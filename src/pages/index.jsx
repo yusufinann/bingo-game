@@ -267,10 +267,11 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
 
         {gameState.gameStarted &&
           !gameState.gameEnded &&
-          gameState.rankings.length > 0 && (
-            <CurrentRankings 
-              rankings={gameState.rankings} 
-              completedPlayers={completedPlayers} 
+          gameState.rankings && gameState.rankings.length > 0 &&
+          completedPlayers && completedPlayers.length > 0 && (
+            <CurrentRankings
+              rankings={gameState.rankings}
+              completedPlayers={completedPlayers} // Pass it down if CurrentRankings needs it separately
             />
           )}
       </CardContent>

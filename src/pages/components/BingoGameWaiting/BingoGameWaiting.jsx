@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import {useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -40,15 +40,12 @@ const BingoGameWaiting = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
 
-
   const [canStartGame, setCanStartGame] = useState(false);
 
   useEffect(() => {
-    setCanStartGame(members.length >= lobbyInfo.minMembers && members.length <= lobbyInfo.maxMembers);
-    setCanStartGame(members.length < lobbyInfo.maxMembers);
 
-
-  }, [members, lobbyInfo.maxMembers, lobbyInfo.minMembers]); 
+    setCanStartGame(members.length >= 2);
+  }, [members, lobbyInfo.maxMembers]); 
 
 
   return (
@@ -71,8 +68,8 @@ const BingoGameWaiting = ({
             borderRadius: 2,
             maxWidth: "900px",
             width: "100%",
-            background: "transparent",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+            background: "transparent", 
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)", 
           }}
         >
           <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -138,8 +135,12 @@ const BingoGameWaiting = ({
                 </Typography>
               </Box>
               <Chip
-                label="Waiting for players"
-                color="warning"
+                label={
+                  members.length < 2 
+                    ? `Waiting for players (Min. 2 needed)` 
+                    : `Waiting for players (${members.length}/${lobbyInfo.maxMembers})`
+                }
+                color={members.length < 2 ? "error" : "warning"}
                 sx={{ width: "100%", py: 1, fontWeight: "bold" }}
               />
             </Paper>
@@ -151,7 +152,7 @@ const BingoGameWaiting = ({
                 size="large"
                 startIcon={<CasinoIcon />}
                 onClick={() => setOpenStartDialog(true)}
-                disabled={canStartGame}
+                disabled={!canStartGame}
                 sx={{
                   py: 1.5,
                   px: 4,
