@@ -1,49 +1,50 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   CardContent,
   Typography,
-  Button,
-  Stack,
   Container,
   CircularProgress,
-  IconButton,
 } from "@mui/material";
 import {
   EmojiEvents as TrophyIcon,
-  VolumeUp as VolumeUpIcon,
-  VolumeOff as VolumeOffIcon,
 } from "@mui/icons-material";
-import {useTheme } from "@mui/material/styles";
-
-// Custom hooks
+import { useTheme } from "@mui/material/styles";
 import useBingoSocket from "../hooks/useBingoSocket";
 import useBingoSound from "../hooks/useBingoSound";
 import useBingoGame from "../hooks/useBingoGame";
-
-// Components
 import Ticket from "./components/Ticket";
 import NumberDisplay from "./components/NumberDisplay";
 import DrawnNumbers from "./components/DrawnNumbers";
 import WinnerDialog from "./components/WinnerDialog";
 import NotificationSnackbar from "./components/NotificationSnackbar";
-import Countdown from "./components/Countdown";
+import CountdownScreen from "./components/CountdownScreen";
 import ActiveNumbers from "./components/ActiveNumbers";
 import RankingsDialog from "./components/RankingsDialog";
 import BingoGameWaiting from "./components/BingoGameWaiting/BingoGameWaiting";
 import CurrentRankings from "./components/CurrentRankings";
 import CompletedPlayers from "./components/CompletedPlayers";
+import GameControls from "./components/GameControls";
 
-const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEnabled, toggleSound, soundEnabledRef }) => {
+const BingoGame = ({
+  members,
+  lobbyInfo,
+  lobbyCode,
+  socket,
+  currentUser,
+  soundEnabled,
+  toggleSound,
+  soundEnabledRef,
+}) => {
   const theme = useTheme();
 
   const palette = theme.palette;
   const textColors = palette.text;
   const primaryColors = palette.primary;
   const secondaryColors = palette.secondary;
-  
+
   const { playSound } = useBingoSound(soundEnabledRef);
-  
+
   const {
     openStartDialog,
     setOpenStartDialog,
@@ -57,9 +58,9 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
     setCompetitionMode,
     isDrawButtonDisabled,
     isCurrentUserHost,
-    handleDrawButton
+    handleDrawButton,
   } = useBingoGame(members, currentUser);
-  
+
   const {
     gameState,
     markedNumbers,
@@ -77,15 +78,26 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
     onGameReset,
     closeWinnerDialog,
     handleCloseNotification,
-    setShowPersonalRankingsDialog
+    setShowPersonalRankingsDialog,
   } = useBingoSocket({
     socket,
     lobbyCode,
-    currentUser, 
+    currentUser,
     members,
     soundEnabledRef,
-    playSoundCallback: playSound
+    playSoundCallback: playSound,
   });
+
+
+  const [showCountdown, setShowCountdown] = React.useState(false);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      setShowCountdown(true);
+    } else {
+      setShowCountdown(false);
+    }
+  }, [countdown]);
 
   const drawNumber = () => {
     handleDrawButton(gameState);
@@ -97,7 +109,7 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
       drawMode,
       drawer: drawMode === "manual" ? selectedDrawer : null,
       bingoMode: selectedBingoMode,
-      competitionMode
+      competitionMode,
     });
     setOpenStartDialog(false);
   };
@@ -116,6 +128,10 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
         </Typography>
       </Box>
     );
+  }
+
+  if (showCountdown && countdown > 0) {
+    return <CountdownScreen countdown={countdown} />;
   }
 
   if (!gameState.gameStarted) {
@@ -139,8 +155,6 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
           currentUser={currentUser}
         />
 
-        <Countdown countdown={countdown} />
-
         <NotificationSnackbar
           open={notification.open}
           message={notification.message}
@@ -154,67 +168,19 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
   return (
     <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
       <CardContent sx={{ p: 3 }}>
-      <Stack 
-          direction="row" 
-          spacing={2} 
-          justifyContent="center" 
-          mb={2}
-        >
-          <Button
-            variant="contained"
-            color="warning"
-            startIcon={<TrophyIcon sx={{ color: secondaryColors.gold }} />}
-            onClick={callBingo}
-            sx={{ 
-              py: 1.5, 
-              px: 4, 
-              borderRadius: 2,
-              bgcolor: primaryColors.main,
-              '&:hover': {
-                bgcolor: primaryColors.dark
-              }
-            }}
-            disabled={gameState.gameEnded || hasCompletedBingo}
-          >
-            {hasCompletedBingo ? "Bingo Completed!" : "Call Bingo!"}
-          </Button>
-
-          {/* Draw Number butonu için tema renkleri */}
-          {gameState.gameStarted &&
-            !gameState.gameEnded &&
-            gameState.drawMode === "manual" &&
-            String(gameState.drawer) === String(currentUser?.id) && (
-              <Button
-                variant="contained"
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  borderRadius: 2,
-                  bgcolor: secondaryColors.main,
-                  '&:hover': {
-                    bgcolor: secondaryColors.dark
-                  }
-                }}
-                onClick={drawNumber}
-                disabled={gameState.gameEnded || isDrawButtonDisabled}
-              >
-                Draw Number
-              </Button>
-            )}
-
-          <IconButton
-            sx={{ color: textColors.primary }}
-            onClick={toggleSound}
-            aria-label={soundEnabled ? "Sesi kapat" : "Sesi aç"}
-          >
-            {soundEnabled ? (
-              <VolumeUpIcon sx={{ color: secondaryColors.main }} />
-            ) : (
-              <VolumeOffIcon sx={{ color: textColors.disabled }} />
-            )}
-          </IconButton>
-        </Stack>
-
+        <GameControls
+          secondaryColors={secondaryColors}
+          primaryColors={primaryColors}
+          textColors={textColors}
+          gameState={gameState}
+          hasCompletedBingo={hasCompletedBingo}
+          currentUser={currentUser}
+          drawNumber={drawNumber}
+          isDrawButtonDisabled={isDrawButtonDisabled}
+          callBingo={callBingo}
+          toggleSound={toggleSound}
+          soundEnabled={soundEnabled}
+        />
 
         <Box
           sx={{
@@ -263,15 +229,17 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
         >
           {gameState.drawnNumbers.length}/{90} Drawn Numbers
         </Typography>
-          <CompletedPlayers completedPlayers={completedPlayers} />
+        <CompletedPlayers completedPlayers={completedPlayers} />
 
         {gameState.gameStarted &&
           !gameState.gameEnded &&
-          gameState.rankings && gameState.rankings.length > 0 &&
-          completedPlayers && completedPlayers.length > 0 && (
+          gameState.rankings &&
+          gameState.rankings.length > 0 &&
+          completedPlayers &&
+          completedPlayers.length > 0 && (
             <CurrentRankings
               rankings={gameState.rankings}
-              completedPlayers={completedPlayers} // Pass it down if CurrentRankings needs it separately
+              completedPlayers={completedPlayers}
             />
           )}
       </CardContent>
@@ -288,11 +256,10 @@ const BingoGame = ({ members, lobbyInfo, lobbyCode, socket, currentUser, soundEn
         currentUser={currentUser}
         onClose={closeWinnerDialog}
       />
-      <Countdown countdown={countdown} />
 
       <RankingsDialog
         open={showRankingsDialog}
-        onClose={onGameReset} 
+        onClose={onGameReset}
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
