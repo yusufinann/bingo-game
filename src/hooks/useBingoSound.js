@@ -6,6 +6,7 @@ import gameStartAudioSrc from "../assets/game-start.mp3";
 import drawNumberSound from "../assets/draw-number.mp3";
 import matchSound from "../assets/matchSound.mp3";
 import wrongBingoSound from "../assets/wrong-bingo.mp3";
+import BingoCountdown from "../assets/bingo-countdown.mp3";
 
 /**
  * Custom hook to manage sound effects in the Bingo game
@@ -17,7 +18,8 @@ const useBingoSound = (soundEnabledRef) => {
     win: new Audio(bingoWinSound),
     match: new Audio(matchSound),
     wrongBingo: new Audio(wrongBingoSound),
-    gameStart: new Audio(gameStartAudioSrc)
+    gameStart: new Audio(gameStartAudioSrc),
+    countdown:new Audio(BingoCountdown)
   }), []);
 
   /**

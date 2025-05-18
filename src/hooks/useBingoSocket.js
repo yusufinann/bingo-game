@@ -196,6 +196,7 @@ const useBingoSocket = ({
           
         case "BINGO_COUNTDOWN":
           setCountdown(data.countdown);
+           playSoundCallback('countdown');
           break;
           
         case "BINGO_STARTED":
