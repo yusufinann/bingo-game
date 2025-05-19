@@ -21,6 +21,7 @@ const GameControls = ({
   textColors,
   toggleSound,
   soundEnabled,
+  t
 }) => {
   return (
     <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
@@ -40,7 +41,7 @@ const GameControls = ({
         }}
         disabled={gameState.gameEnded || hasCompletedBingo}
       >
-        {hasCompletedBingo ? "Bingo Completed!" : "Call Bingo!"}
+        {hasCompletedBingo ? t("Bingo Completed!") : t("Call Bingo!")}
       </Button>
 
       {gameState.gameStarted &&
@@ -61,7 +62,7 @@ const GameControls = ({
             onClick={drawNumber}
             disabled={gameState.gameEnded || isDrawButtonDisabled}
           >
-            Draw Number
+            {t("Draw Number")}
           </Button>
         )}
 

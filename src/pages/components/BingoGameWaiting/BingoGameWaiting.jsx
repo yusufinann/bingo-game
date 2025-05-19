@@ -1,4 +1,4 @@
-import {useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -34,19 +34,16 @@ const BingoGameWaiting = ({
   startGameWithOptions,
   competitionMode,
   setCompetitionMode,
-  currentUser
+  t
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-
   const [canStartGame, setCanStartGame] = useState(false);
 
   useEffect(() => {
-
     setCanStartGame(members.length >= 2);
-  }, [members, lobbyInfo.maxMembers]); 
-
+  }, [members, lobbyInfo.maxMembers]);
 
   return (
     <Box
@@ -68,8 +65,8 @@ const BingoGameWaiting = ({
             borderRadius: 2,
             maxWidth: "900px",
             width: "100%",
-            background: "transparent", 
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)", 
+            background: "transparent",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
           }}
         >
           <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -91,7 +88,7 @@ const BingoGameWaiting = ({
                 letterSpacing: "0.5px",
               }}
             >
-              Bingo Game Lobby
+              {t("bingoGameWaiting.lobbyTitle")}
             </Typography>
             <Typography
               variant="subtitle1"
@@ -99,8 +96,8 @@ const BingoGameWaiting = ({
               sx={{ mt: 1, fontWeight: 500 }}
             >
               {isCurrentUserHost
-                ? "You're the host! Start the game when everyone is ready."
-                : "Please wait for the host to start the game."}
+                ? t("bingoGameWaiting.hostMessage")
+                : t("bingoGameWaiting.guestMessage")}
             </Typography>
           </Box>
 
@@ -131,14 +128,14 @@ const BingoGameWaiting = ({
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 1 }}>
                 <ClockIcon color="secondary" sx={{ mr: 1 }} />
                 <Typography variant="h6" color="text.primary">
-                  Game Status
+                  {t("bingoGameWaiting.gameStatusTitle")}
                 </Typography>
               </Box>
               <Chip
                 label={
-                  members.length < 2 
-                    ? `Waiting for players (Min. 2 needed)` 
-                    : `Waiting for players (${members.length}/${lobbyInfo.maxMembers})`
+                  members.length < 2
+                    ? t("bingoGameWaiting.status.waitingForMinPlayers")
+                    : t("bingoGameWaiting.status.waitingForPlayers", { currentPlayers: members.length, maxPlayers: lobbyInfo.maxMembers })
                 }
                 color={members.length < 2 ? "error" : "warning"}
                 sx={{ width: "100%", py: 1, fontWeight: "bold" }}
@@ -167,7 +164,7 @@ const BingoGameWaiting = ({
                   transition: "transform 0.2s, box-shadow 0.2s",
                 }}
               >
-                Start Game ({members.length}/{lobbyInfo.maxMembers})
+                {t("bingoGameWaiting.startGameButton", { currentPlayers: members.length, maxPlayers: lobbyInfo.maxMembers })}
               </Button>
             ) : (
               <Box sx={{ textAlign: "center", p: 2 }}>
@@ -177,7 +174,7 @@ const BingoGameWaiting = ({
                   color="text.secondary"
                   sx={{ mt: 2, fontStyle: "italic" }}
                 >
-                  Waiting for host to start...
+                  {t("bingoGameWaiting.waitingForHost")}
                 </Typography>
               </Box>
             )}
@@ -198,6 +195,7 @@ const BingoGameWaiting = ({
         onStartGame={startGameWithOptions}
         competitionMode={competitionMode}
         setCompetitionMode={setCompetitionMode}
+        t={t}
       />
     </Box>
   );

@@ -25,7 +25,7 @@ import {
   Leaderboard as LeaderboardIcon,
 } from "@mui/icons-material";
 
-const CurrentRankings = ({ rankings = [], completedPlayers = [] }) => {
+const CurrentRankings = ({ rankings = [], completedPlayers = [],t }) => {
   // State for collapsible rankings in the main UI
   const [expanded, setExpanded] = useState(false);
   // State for dialog display
@@ -67,7 +67,7 @@ const CurrentRankings = ({ rankings = [], completedPlayers = [] }) => {
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="h6" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <TrophyIcon color="primary" fontSize="small" />
-            Current Rankings
+            {t("Current Rankings")}
           </Typography>
           
           <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -127,7 +127,7 @@ const CurrentRankings = ({ rankings = [], completedPlayers = [] }) => {
                       onClick={openRankingsDialog}
                       sx={{ fontSize: "0.75rem", py: 0 }}
                     >
-                      View All ({rankings.length})
+                      {t("View All")} ({rankings.length})
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -146,15 +146,15 @@ const CurrentRankings = ({ rankings = [], completedPlayers = [] }) => {
       >
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <TrophyIcon color="primary" />
-          Complete Rankings
+          {t("Complete Rankings")}
         </DialogTitle>
         <DialogContent dividers>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Rank</TableCell>
-                <TableCell>Player</TableCell>
-                <TableCell>Score</TableCell>
+                <TableCell>{t("Rank")}</TableCell>
+                <TableCell>{t("Player")}</TableCell>
+                <TableCell>{t("Score")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -182,7 +182,7 @@ const CurrentRankings = ({ rankings = [], completedPlayers = [] }) => {
           </Table>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Close</Button>
+          <Button onClick={handleCloseDialog}>{t("Close")}</Button>
         </DialogActions>
       </Dialog>
     </>

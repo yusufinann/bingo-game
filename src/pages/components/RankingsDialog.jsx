@@ -17,9 +17,6 @@ import {
   Chip,
   Zoom,
   Grow,
-  Avatar,
-  IconButton,
-  Tooltip,
   useTheme
 } from "@mui/material";
 import { styled } from '@mui/material/styles';
@@ -104,7 +101,7 @@ const RankingsDialog = ({
   onGameReset,
   dialogTitle = 'Game Rankings',
   showCloseButton = true,
-  gameId
+  t
 }) => {
   const [confirmClose, setConfirmClose] = useState(false);
   const theme = useTheme();
@@ -156,10 +153,10 @@ const RankingsDialog = ({
             <Table>
               <TableHead>
                 <TableRow sx={{ bgcolor: theme.palette.primary.dark }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Rank</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Player</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Score</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Status</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t("Rank")}</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t("Player")}</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t("Score")}</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t("Status")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

@@ -2,25 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Box, IconButton, Typography, Container, useTheme } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
-const DrawnNumbers = ({ drawnNumbers }) => {
+const DrawnNumbers = ({ drawnNumbers, t }) => {
   const theme = useTheme();
   const [currentPage, setCurrentPage] = useState(0);
   const numbersPerPage = 10;
 
-  // Automatically scroll to the last page when drawnNumbers change
   useEffect(() => {
-    if (drawnNumbers.length > 0) { // Ensure there are drawn numbers before calculating pages
+    if (drawnNumbers.length > 0) {
       const totalPages = Math.ceil(drawnNumbers.length / numbersPerPage);
-      setCurrentPage(totalPages > 0 ? totalPages - 1 : 0); // Go to last page, or page 0 if no pages
+      setCurrentPage(totalPages > 0 ? totalPages - 1 : 0);
     } else {
-      setCurrentPage(0); // Reset to page 0 if drawnNumbers is empty
+      setCurrentPage(0);
     }
-  }, [drawnNumbers]);
+  }, [drawnNumbers, numbersPerPage]); 
 
-  // Calculate total pages
   const totalPages = Math.ceil(drawnNumbers.length / numbersPerPage);
 
-  // Get numbers for current page (showing in drawing order)
   const currentPageNumbers = drawnNumbers.slice(
     currentPage * numbersPerPage,
     (currentPage + 1) * numbersPerPage
@@ -48,6 +45,7 @@ const DrawnNumbers = ({ drawnNumbers }) => {
         <IconButton
           onClick={handlePrevPage}
           disabled={currentPage === 0}
+          aria-label={t('drawnNumbers.previousPage')}
           sx={{
             color: theme.palette.primary.main,
             '&.Mui-disabled': {
@@ -64,7 +62,8 @@ const DrawnNumbers = ({ drawnNumbers }) => {
             gap: 1.5,
             alignItems: 'center',
             flexWrap: 'wrap',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            minHeight: 60, // To prevent layout shift when numbers are few
           }}
         >
           {currentPageNumbers.map((number) => (
@@ -102,8 +101,8 @@ const DrawnNumbers = ({ drawnNumbers }) => {
                 }
               }}
             >
-              <Typography 
-                variant="body1" 
+              <Typography
+                variant="body1"
                 fontWeight="bold"
                 sx={{ userSelect: 'none' }}
               >
@@ -115,7 +114,8 @@ const DrawnNumbers = ({ drawnNumbers }) => {
 
         <IconButton
           onClick={handleNextPage}
-          disabled={currentPage === totalPages - 1 || totalPages <= 1}
+          disabled={currentPage === totalPages - 1 || totalPages <= 0} // Changed totalPages <= 1 to totalPages <= 0 for empty case
+          aria-label={t('drawnNumbers.nextPage')}
           sx={{
             color: theme.palette.primary.main,
             '&.Mui-disabled': {
@@ -127,16 +127,17 @@ const DrawnNumbers = ({ drawnNumbers }) => {
         </IconButton>
       </Box>
 
-      {/* Page indicator */}
       <Typography
         variant="body2"
-        sx={{ 
-          mt: 1, 
+        sx={{
+          mt: 1,
           textAlign: 'center',
           color: theme.palette.text.secondary
         }}
       >
-        {totalPages > 0 ? `Page ${currentPage + 1} of ${totalPages}` : 'Page 1 of 1'}
+        {totalPages > 0
+          ? t('drawnNumbers.pageIndicator', { currentPage: currentPage + 1, totalPages: totalPages })
+          : t('drawnNumbers.noPages')}
       </Typography>
     </Container>
   );

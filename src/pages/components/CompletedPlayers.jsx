@@ -14,16 +14,14 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Paper,
   Chip,
 } from "@mui/material";
 import {
   EmojiEvents as TrophyIcon,
-  Person as PersonIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
 
-const CompletedPlayers = ({ completedPlayers = [] }) => {
+const CompletedPlayers = ({ completedPlayers = [] ,t}) => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const openDialog = () => {
@@ -38,7 +36,7 @@ const CompletedPlayers = ({ completedPlayers = [] }) => {
   if (!completedPlayers || completedPlayers.length === 0) {
     return (
       <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
-        No players have completed Bingo yet.
+        {t("No players have completed Bingo yet")}.
       </Typography>
     );
   }
@@ -48,7 +46,7 @@ const CompletedPlayers = ({ completedPlayers = [] }) => {
       {/* Compact display with badge and clickable icon */}
       <Box sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}>
         <Typography variant="body1" sx={{ mr: 1 }}>
-          Bingo Completed:
+          {t("Bingo Completed")}:
         </Typography>
         
         <Tooltip title="View all players who completed Bingo">
@@ -102,7 +100,7 @@ const CompletedPlayers = ({ completedPlayers = [] }) => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <TrophyIcon color="warning" />
             <Typography variant="h6">
-              Players Who Completed Bingo
+              {t("Players Who Completed Bingo")}
             </Typography>
           </Box>
           <IconButton size="small" onClick={closeDialog}>
@@ -112,7 +110,7 @@ const CompletedPlayers = ({ completedPlayers = [] }) => {
         
         <DialogContent dividers>
           {completedPlayers.length === 0 ? (
-            <Typography align="center">No players have completed Bingo yet.</Typography>
+            <Typography align="center">{t("No players have completed Bingo yet")}.</Typography>
           ) : (
             <List dense>
               {completedPlayers.map((player, index) => (
@@ -133,7 +131,7 @@ const CompletedPlayers = ({ completedPlayers = [] }) => {
         </DialogContent>
         
         <DialogActions>
-          <Button onClick={closeDialog}>Close</Button>
+          <Button onClick={closeDialog}>{t("Close")}</Button>
         </DialogActions>
       </Dialog>
 

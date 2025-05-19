@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Box } from '@mui/material';
 
-const ActiveNumbers = ({ activeNumbers, bingoMode }) => {
+const ActiveNumbers = ({ activeNumbers, bingoMode,t }) => {
   if (bingoMode === 'classic' || bingoMode === 'superfast' || !activeNumbers || activeNumbers.length === 0) {
     return null;
   }
@@ -9,7 +9,7 @@ const ActiveNumbers = ({ activeNumbers, bingoMode }) => {
   return (
     <>
       <Typography variant="h6" gutterBottom>
-        Active Numbers
+        {t("Active Numbers")}
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
         {activeNumbers.map((num, index) => (

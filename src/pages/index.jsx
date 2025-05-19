@@ -35,6 +35,7 @@ const BingoGame = ({
   soundEnabled,
   toggleSound,
   soundEnabledRef,
+  t
 }) => {
   const theme = useTheme();
 
@@ -124,7 +125,7 @@ const BingoGame = ({
       >
         <CircularProgress />
         <Typography variant="h6" ml={2}>
-          Waiting for connection...
+          {t("Waiting for connection...")}
         </Typography>
       </Box>
     );
@@ -153,6 +154,7 @@ const BingoGame = ({
           competitionMode={competitionMode}
           setCompetitionMode={setCompetitionMode}
           currentUser={currentUser}
+          t={t}
         />
 
         <NotificationSnackbar
@@ -180,6 +182,7 @@ const BingoGame = ({
           callBingo={callBingo}
           toggleSound={toggleSound}
           soundEnabled={soundEnabled}
+          t={t}
         />
 
         <Box
@@ -197,7 +200,7 @@ const BingoGame = ({
               sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
             >
               <TrophyIcon color="primary" />
-              Your Ticket
+              {t("Your Ticket")}
             </Typography>
             <Ticket
               ticket={gameState.ticket}
@@ -216,20 +219,21 @@ const BingoGame = ({
             <ActiveNumbers
               activeNumbers={gameState.activeNumbers}
               bingoMode={gameState.bingoMode}
+              t={t}
             />
           </Box>
         </Box>
 
-        <DrawnNumbers drawnNumbers={gameState.drawnNumbers} />
+        <DrawnNumbers drawnNumbers={gameState.drawnNumbers} t={t}/>
         <Typography
           variant="body2"
           color="text.secondary"
           align="center"
           sx={{ mt: 1, mb: 2 }}
         >
-          {gameState.drawnNumbers.length}/{90} Drawn Numbers
+          {gameState.drawnNumbers.length}/{90} {t("Drawn Numbers")}
         </Typography>
-        <CompletedPlayers completedPlayers={completedPlayers} />
+        <CompletedPlayers completedPlayers={completedPlayers} t={t}/>
 
         {gameState.gameStarted &&
           !gameState.gameEnded &&
@@ -240,6 +244,7 @@ const BingoGame = ({
             <CurrentRankings
               rankings={gameState.rankings}
               completedPlayers={completedPlayers}
+              t={t}
             />
           )}
       </CardContent>
@@ -265,6 +270,7 @@ const BingoGame = ({
         lobbyCode={lobbyCode}
         onGameReset={onGameReset}
         gameId={gameState.gameId}
+        t={t}
       />
       <RankingsDialog
         open={showPersonalRankingsDialog}
@@ -276,6 +282,7 @@ const BingoGame = ({
         showCloseButton={true}
         onGameReset={onGameReset}
         gameId={gameState.gameId}
+        t={t}
       />
     </Container>
   );
