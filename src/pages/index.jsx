@@ -80,13 +80,14 @@ const BingoGame = ({
     closeWinnerDialog,
     handleCloseNotification,
     setShowPersonalRankingsDialog,
+    
   } = useBingoSocket({
     socket,
     lobbyCode,
     currentUser,
     members,
     soundEnabledRef,
-    playSoundCallback: playSound,
+    playSoundCallback: playSound,t
   });
 
 
@@ -132,12 +133,12 @@ const BingoGame = ({
   }
 
   if (showCountdown && countdown > 0) {
-    return <CountdownScreen countdown={countdown} />;
+    return <CountdownScreen countdown={countdown} t={t}/>;
   }
 
   if (!gameState.gameStarted) {
     return (
-      <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
+      <Container maxWidth="100%" style={{ width: "100%", height: "100%"}}>
         <BingoGameWaiting
           members={members}
           lobbyInfo={lobbyInfo}
