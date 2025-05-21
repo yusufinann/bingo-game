@@ -80,6 +80,7 @@ const BingoGame = ({
     closeWinnerDialog,
     handleCloseNotification,
     setShowPersonalRankingsDialog,
+    activeInOtherGameError
     
   } = useBingoSocket({
     socket,
@@ -88,11 +89,11 @@ const BingoGame = ({
     members,
     soundEnabledRef,
     playSoundCallback: playSound,t
-  });
+  }); 
 
 
   const [showCountdown, setShowCountdown] = React.useState(false);
-
+  console.log("gameState players: ",gameState.players)
   useEffect(() => {
     if (countdown > 0) {
       setShowCountdown(true);
@@ -140,7 +141,7 @@ const BingoGame = ({
     return (
       <Container maxWidth="100%" style={{ width: "100%", height: "100%"}}>
         <BingoGameWaiting
-          members={members}
+          gameState={gameState}
           lobbyInfo={lobbyInfo}
           isCurrentUserHost={isCurrentUserHost}
           openStartDialog={openStartDialog}
@@ -156,6 +157,7 @@ const BingoGame = ({
           setCompetitionMode={setCompetitionMode}
           currentUser={currentUser}
           t={t}
+          activeInOtherGameError={activeInOtherGameError} 
         />
 
         <NotificationSnackbar
