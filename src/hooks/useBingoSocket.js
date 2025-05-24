@@ -191,7 +191,7 @@ const useBingoSocket = ({
           if (!initialJoinNotificationShown && !data.isRejoin) {
             setNotification({
               open: true,
-              message: "Successfully joined the Bingo game!",
+              message: t("notifications.joinedSuccess"),
               severity: "success",
             });
             setInitialJoinNotificationShown(true);
