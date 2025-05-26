@@ -1,45 +1,54 @@
 import React from 'react';
 import { Box, Grid, Paper, Typography, useTheme } from '@mui/material';
 
-const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber }) => {
+const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber, playerColor,t }) => {
   const theme = useTheme();
-  
-  // Row patterns for ticket layout
-  const rowPatterns = [
-    [true, false, true, false, true, false, true, true, false], // First row
-    [true, true, false, true, false, true, false, true, false], // Second row
-    [true, false, true, false, true, false, true, false, true]  // Third row
-  ];
+
+  if (!ticket || !ticket.layout || !ticket.numbersGrid) {
+    return <Typography>{t("TicketLoading")}</Typography>;
+  }
+
+  const { layout: ticketLayout, numbersGrid: ticketNumbersGrid } = ticket;
+
+  const basePlayerColor = playerColor || theme.palette.primary.main;
 
   const renderTicket = () => {
-    return rowPatterns.map((pattern, rowIndex) => {
-      let numberIndex = 0;
-      const rowStart = rowIndex * 5; // Starting index for each row from ticket array
-
+    return ticketLayout.map((rowPattern, rowIndex) => {
       return (
-        <Grid container key={rowIndex}>
-          {pattern.map((hasNumber, cellIndex) => {
-            const currentNumber = hasNumber ? ticket[rowStart + numberIndex++] : null;
+        <Grid container key={rowIndex} wrap="nowrap">
+          {rowPattern.map((hasNumber, cellIndex) => {
+            const currentNumber = ticketNumbersGrid[rowIndex][cellIndex];
             const isMarked = currentNumber && markedNumbers.includes(currentNumber);
             const isActive = currentNumber && activeNumbers.includes(currentNumber);
 
-            // Get appropriate colors based on theme
-            const cellBgColor = isMarked 
-              ? theme.palette.warning.main
-              : hasNumber 
-                ? theme.palette.primary.main
-                : theme.palette.background.paper;
+            let cellBgColor;
+            let cellTextColor;
 
-            const cellColor = hasNumber 
-              ? theme.palette.primary.contrastText 
-              : 'transparent';
+            if (isMarked) {
+              cellBgColor = theme.palette.warning.main;
+              cellTextColor = theme.palette.getContrastText(cellBgColor);
+            } else if (hasNumber) {
+              cellBgColor = basePlayerColor;
+              try {
+                cellTextColor = theme.palette.getContrastText(basePlayerColor);
+              } catch (e) {
+                console.warn("Geçersiz oyuncu rengi formatı, metin rengi için varsayılan kullanılıyor:", basePlayerColor);
+                cellTextColor = theme.palette.common.black; 
+              }
+
+            } else {
+              cellBgColor = theme.palette.background.paper;
+              cellTextColor = 'transparent'; 
+            }
+            
+            const canBeClicked = currentNumber && isActive && !isMarked && onMarkNumber;
 
             return (
-              <Grid item xs key={cellIndex}>
+              <Grid item xs key={cellIndex} sx={{ minWidth: '11.11%', maxWidth: '11.11%' }}>
                 <Paper
                   elevation={0}
                   onClick={() => {
-                    if (currentNumber && isActive && !isMarked && onMarkNumber) {
+                    if (canBeClicked) {
                       onMarkNumber(currentNumber);
                     }
                   }}
@@ -48,26 +57,27 @@ const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber }
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: `2px solid ${theme.palette.primary.main}`,
-                    borderRadius: 0,
-                    bgcolor: cellBgColor,
-                    color: cellColor,
-                    cursor: isActive && !isMarked ? 'pointer' : 'default',
-                    m: 0,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[400]}`, 
+                    borderRadius: 0.5,
+                    bgcolor: cellBgColor, 
+                    color: cellTextColor, 
+                    cursor: canBeClicked ? 'pointer' : 'default',
+                    m: 0.25,
                     p: 0,
-                    transition: 'all 0.2s ease-in-out',
+                    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease-in-out, color 0.2s ease-in-out',
+                    userSelect: 'none',
                     '&:hover': {
-                      opacity: isActive && !isMarked ? 0.9 : 1,
-                    }
+                      opacity: canBeClicked ? 0.85 : 1,
+                      transform: canBeClicked ? 'scale(1.05)' : 'none',
+                    },
                   }}
                 >
                   {currentNumber && (
-                    <Typography 
-                      variant="body1" 
+                    <Typography
+                      variant="body2"
                       fontWeight="bold"
                       sx={{
-                        fontSize: '1rem',
-                        userSelect: 'none'
+                        fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' },
                       }}
                     >
                       {currentNumber}
@@ -83,25 +93,21 @@ const Ticket = ({ ticket, markedNumbers = [], activeNumbers = [], onMarkNumber }
   };
 
   return (
-    <Box 
+    <Box
       sx={{
         display: 'flex',
+        flexDirection: 'column',
         backgroundColor: theme.palette.background.default,
         borderRadius: 1,
         overflow: 'hidden',
-        boxShadow: theme.shadows[2]
+        boxShadow: theme.shadows[3],
+        border: `3px solid ${basePlayerColor}`, 
+        p: 0.5,
+        width: '100%',
+        margin: 'auto',
       }}
     >
-      <Box
-        sx={{
-          width: '100%',
-          border: `2px solid ${theme.palette.primary.main}`,
-          p: 0.5,
-          bgcolor: theme.palette.background.paper
-        }}
-      >
-        {renderTicket()}
-      </Box>
+      {renderTicket()}
     </Box>
   );
 };
