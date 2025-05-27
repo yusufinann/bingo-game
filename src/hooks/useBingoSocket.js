@@ -1,4 +1,3 @@
-// useBingoSocket.js
 import { useState, useEffect, useCallback } from "react";
 
 const useBingoSocket = ({
@@ -44,7 +43,7 @@ const useBingoSocket = ({
   const [activeInOtherGameError, setActiveInOtherGameError] = useState(null);
   const [currentPlayerColor, setCurrentPlayerColor] = useState(null);
 
-    const onGameReset = useCallback(() => {
+  const onGameReset = useCallback(() => {
     setGameState((prev) => ({
       ...prev,
       gameId: null,
@@ -69,10 +68,10 @@ const useBingoSocket = ({
     setInitialJoinNotificationShown(false);
     setCurrentPlayerColor(null);
   }, []);
-  
-const handleCloseRankingsDialog = useCallback(() => {
-  onGameReset();
-}, [onGameReset]); 
+
+  const handleCloseRankingsDialog = useCallback(() => {
+    onGameReset();
+  }, [onGameReset]);
 
   const startGameWithOptions = useCallback(
     (options) => {
@@ -123,8 +122,6 @@ const handleCloseRankingsDialog = useCallback(() => {
     [socket, lobbyCode, playSoundCallback]
   );
 
-
-
   useEffect(() => {
     if (!socket) return;
 
@@ -142,12 +139,14 @@ const handleCloseRankingsDialog = useCallback(() => {
 
       if (data.type === "BINGO_ERROR" && data.activeGameInfo) {
         setActiveInOtherGameError({
-          message: data.message,
+          message: data.message,         
+          messageKey: data.messageKey,   
           activeGameInfo: data.activeGameInfo,
         });
-        // Potentially reset other states if join failed due to this
-        onGameReset(); // Resetting might be too aggressive, depends on desired UX
-      } else if (messageOriginLobbyCode && messageOriginLobbyCode !== lobbyCode) {
+        return;
+      }
+
+      if (messageOriginLobbyCode && messageOriginLobbyCode !== lobbyCode) {
         return;
       }
 
@@ -215,8 +214,8 @@ const handleCloseRankingsDialog = useCallback(() => {
         case "BINGO_PLAYER_COMPLETED":
             setCompletedPlayers(prev => {
                 const playerExists = prev.some(p => String(p.id || p.userId) === String(data.playerId));
-                if (playerExists) { // Update existing player info if necessary
-                    return prev.map(p => String(p.id || p.userId) === String(data.playerId) ? { ...p, name: data.playerName, avatar: data.avatar } : p);
+                if (playerExists) {
+                    return prev.map(p => String(p.id || p.userId) === String(data.playerId) ? { ...p, name: data.playerName, avatar: data.avatar, completedAt: data.completedAt || p.completedAt } : p);
                 }
                 return [...prev, { id: data.playerId, name: data.playerName, avatar: data.avatar, completedAt: data.completedAt }];
             });
@@ -286,9 +285,6 @@ const handleCloseRankingsDialog = useCallback(() => {
               setGameState(prev => ({ ...prev, ticket: myPlayerData.ticket || null }));
               setCurrentPlayerColor(myPlayerData.color || null);
             } else {
-              // Fallback if player data for current user not in players list (should not happen if BINGO_JOIN was successful)
-              // This might indicate a rejoin scenario where the ticket is already in gameState
-              // Or, if current user somehow not in the `data.players` list from BINGO_STARTED
               console.warn("Current user's data not found in BINGO_STARTED players list. Ticket/color might be stale.");
             }
           }
@@ -385,7 +381,6 @@ const handleCloseRankingsDialog = useCallback(() => {
             rankings: data.finalRankings || [],
           }));
           
-          // The rest of your BINGO_GAME_OVER logic is likely fine:
           const allPlayersFromRankings = data.finalRankings ? data.finalRankings.map(p => ({id: p.playerId, name: p.userName, avatar: p.avatar, completedAt: p.completedAt })) : [];
           setCompletedPlayers(allPlayersFromRankings.filter(p => !!p.completedAt));
 
@@ -400,19 +395,17 @@ const handleCloseRankingsDialog = useCallback(() => {
             setWinnerDetails(null); 
           }
 
-          setShowRankingsDialog(true); // This will now correctly show the dialog over the game screen
-          setShowPersonalRankingsDialog(false); // Good practice to hide other similar dialogs
+          setShowRankingsDialog(true);
+          setShowPersonalRankingsDialog(false);
           playSoundCallback("gameOver");
           break;
 
         case "BINGO_ERROR":
-          if (!data.activeGameInfo) {
-            setNotification({
-              open: true,
-              message: data.message || (data.error ? (typeof data.error === 'string' ? data.error : data.error.message) : "An error occurred."),
-              severity: "error",
-            });
-          }
+          setNotification({
+            open: true,
+            message: data.message || (data.error ? (typeof data.error === 'string' ? data.error : data.error.message) : "An error occurred."),
+            severity: "error",
+          });
           break;
         
         case "BINGO_PLAYER_LEFT":
@@ -442,11 +435,10 @@ const handleCloseRankingsDialog = useCallback(() => {
     socket,
     lobbyCode,
     currentUser,
+    members,
     playSoundCallback,
-    initialJoinNotificationShown,
     t,
-    onGameReset,
-    members 
+    initialJoinNotificationShown,
   ]);
 
   const closeWinnerDialog = useCallback(() => {
@@ -477,7 +469,8 @@ const handleCloseRankingsDialog = useCallback(() => {
     closeWinnerDialog,
     handleCloseNotification,
     setShowRankingsDialog,
-    setShowPersonalRankingsDialog,handleCloseRankingsDialog
+    setShowPersonalRankingsDialog,
+    handleCloseRankingsDialog
   };
 };
 
