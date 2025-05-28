@@ -1,14 +1,15 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, useTheme} from '@mui/material';
 
 const ActiveNumbers = ({ activeNumbers, bingoMode,t }) => {
+   const theme = useTheme();
   if (bingoMode === 'classic' || bingoMode === 'superfast' || !activeNumbers || activeNumbers.length === 0) {
     return null;
   }
-
+ 
   return (
     <>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="subtitle1" fontWeight="bold"  gutterBottom>
         {t("Active Numbers")}
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
@@ -23,7 +24,7 @@ const ActiveNumbers = ({ activeNumbers, bingoMode,t }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
+              color: theme.palette.primary.contrastText,
               fontSize: '1rem',
               fontWeight: 'bold',
               boxShadow: 3,
