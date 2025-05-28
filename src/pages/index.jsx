@@ -82,7 +82,6 @@ const BingoGame = ({
     closeWinnerDialog, // Kept for potential future use
     handleCloseNotification,
     setShowPersonalRankingsDialog,
-    activeInOtherGameError,
     handleCloseRankingsDialog // This is typically onGameReset
   } = useBingoSocket({
     socket,
@@ -162,7 +161,6 @@ const BingoGame = ({
           setCompetitionMode={setCompetitionMode}
           currentUser={currentUser}
           t={t}
-          activeInOtherGameError={activeInOtherGameError}
         />
       ) : (
         // Show Game Content Area if game has started OR if a ranking dialog is active (showing final game state behind it)
