@@ -99,7 +99,7 @@ const GameActionsCard = ({
                 align="center"
                 sx={{ mb: 3, maxWidth: 400, mx: "auto" }}
               >
-                {gamePlayers.length < 1
+                {gamePlayers.length < 2
                   ? t("needMorePlayers")
                   : t("readyToStart")}
               </Typography>

@@ -1,141 +1,162 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback, useMemo } from "react";
 import { useTheme } from "@mui/material/styles";
+
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(null, args);
+    }, delay);
+  };
+};
+
+const DEFAULT_BRIGHT_COLORS = [
+  "#FFFFFF", "#E0E0E0",
+  "#4FC3F7", "#81C784", "#FFB74D", "#BA68C8"
+];
+
+class Dot {
+  constructor(canvasWidth, canvasHeight, colors) {
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+    this.availableColors = colors;
+    this.radius = Math.random() * 1.5 + 0.5;
+    this.reset();
+    this.y = Math.random() * this.canvasHeight;
+  }
+
+  reset() {
+    this.x = Math.random() * this.canvasWidth;
+    this.y = -this.radius - (Math.random() * this.canvasHeight * 0.15);
+    this.radius = Math.random() * 1.5 + 0.5;
+    this.speed = Math.random() * 1.0 + 0.4;
+    if (this.availableColors && this.availableColors.length > 0) {
+      this.color = this.availableColors[Math.floor(Math.random() * this.availableColors.length)];
+    } else {
+      this.color = "#FFFFFF";
+    }
+  }
+
+  draw(context) {
+    context.beginPath();
+    context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+    context.fillStyle = this.color;
+    context.fill();
+  }
+
+  update() {
+    this.y += this.speed;
+    if (this.y - this.radius > this.canvasHeight) {
+      this.reset();
+    }
+  }
+}
 
 const FallingDotsBackground = () => {
   const canvasRef = useRef(null);
   const theme = useTheme();
   const animationFrameId = useRef(null);
+  const dotsRef = useRef([]);
+  const numDots = 80;
+
+  const getDotColors = useCallback(() => {
+    const isDarkMode = theme.palette.mode === 'dark';
+    const selectedColors = new Set();
+
+    if (isDarkMode) {
+      [
+        theme.palette.primary?.light,
+        theme.palette.secondary?.light,
+        theme.palette.info?.light,
+        theme.palette.success?.light,
+        theme.palette.text?.secondary,
+      ].filter(Boolean).forEach(color => selectedColors.add(color));
+      DEFAULT_BRIGHT_COLORS.slice(0, 2).forEach(color => selectedColors.add(color));
+    } else {
+      [
+        theme.palette.primary?.main,
+        theme.palette.secondary?.main,
+        theme.palette.info?.main,
+        theme.palette.success?.main,
+      ].filter(Boolean).forEach(color => selectedColors.add(color));
+      DEFAULT_BRIGHT_COLORS.slice(2).forEach(color => selectedColors.add(color));
+    }
+
+    let finalColors = Array.from(selectedColors);
+
+    if (finalColors.length === 0) {
+      finalColors = isDarkMode ? DEFAULT_BRIGHT_COLORS.slice(0, 2) : DEFAULT_BRIGHT_COLORS;
+    }
+    if (finalColors.length === 0) {
+        finalColors = ["#FFFFFF"];
+    }
+    return finalColors;
+  }, [
+    theme.palette.mode,
+    theme.palette.primary,
+    theme.palette.secondary,
+    theme.palette.info,
+    theme.palette.success,
+    theme.palette.text,
+  ]);
+
+  const availableColors = useMemo(() => getDotColors(), [getDotColors]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    let dots = [];
-    const numDots = 150; 
 
-    const getDotColors = () => {
-      const isDarkMode = theme.palette.mode === 'dark';
-      const colorSet = new Set();
-
-
-      if (theme.palette.primary.main) colorSet.add(theme.palette.primary.main);
-      if (theme.palette.secondary.main) colorSet.add(theme.palette.secondary.main);
-      if (theme.palette.info.main) colorSet.add(theme.palette.info.main);
-      if (theme.palette.success.main) colorSet.add(theme.palette.success.main);
-      
- 
-      if (theme.palette.primary.light) colorSet.add(theme.palette.primary.light);
-      if (theme.palette.secondary.light) colorSet.add(theme.palette.secondary.light);
-      if (theme.palette.info.light) colorSet.add(theme.palette.info.light);
-      if (theme.palette.success.light) colorSet.add(theme.palette.success.light);
-
-
-      if (theme.palette.text.primary) colorSet.add(theme.palette.text.primary);
-      if (theme.palette.text.secondary) colorSet.add(theme.palette.text.secondary);
-      
-    
-      const defaultBrightColors = [
-        "#FFFFFF", "#E0E0E0", 
-        "#4FC3F7", "#81C784", "#FFB74D", "#BA68C8" 
-      ];
-
-      let finalColors = Array.from(colorSet);
-
-      if (isDarkMode) {
-  
-        const lightThemeColors = [
-            theme.palette.primary.light,
-            theme.palette.secondary.light,
-            theme.palette.info.light,
-            theme.palette.success.light,
-            theme.palette.text.secondary, 
-        ].filter(Boolean); 
-        finalColors = [...new Set([...lightThemeColors, ...defaultBrightColors.slice(0,2)])]; 
-      } else {
-     
-         const mainThemeColors = [
-            theme.palette.primary.main,
-            theme.palette.secondary.main,
-            theme.palette.info.main,
-         ].filter(Boolean);
-         finalColors = [...new Set([...mainThemeColors, ...defaultBrightColors.slice(2)])];
+    const initializeDots = () => {
+      dotsRef.current = [];
+      for (let i = 0; i < numDots; i++) {
+        dotsRef.current.push(new Dot(canvas.width, canvas.height, availableColors));
       }
-      
-
-      if (finalColors.length === 0) {
-        finalColors = defaultBrightColors;
-      }
-
-      return finalColors;
     };
 
-    let availableColors = getDotColors();
-
     const resizeCanvas = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      availableColors = getDotColors(); 
+      const currentCanvas = canvasRef.current;
+      if (!currentCanvas) return;
+
+      const newWidth = currentCanvas.offsetWidth;
+      const newHeight = currentCanvas.offsetHeight;
+
+      if (currentCanvas.width !== newWidth || currentCanvas.height !== newHeight) {
+        currentCanvas.width = newWidth;
+        currentCanvas.height = newHeight;
+      }
       initializeDots();
     };
 
-    class Dot {
-      constructor() {
-        this.reset();
-        this.y = Math.random() * canvas.height;
-      }
-
-      reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = 0 - Math.random() * 70; 
-        this.radius = Math.random() * 2 + 1;
-        this.speed = Math.random() * 1.5 + 0.8; 
-        this.color = availableColors[Math.floor(Math.random() * availableColors.length)];
-      }
-
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-      }
-
-      update() {
-        this.y += this.speed;
-        if (this.y - this.radius > canvas.height) {
-          this.reset();
-        }
-      }
-    }
-
-    const initializeDots = () => {
-      dots = [];
-      for (let i = 0; i < numDots; i++) {
-        dots.push(new Dot());
-      }
-    };
-
     const animate = () => {
+      if (!canvasRef.current || !ctx) {
+         if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+         return;
+      }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      dots.forEach((dot) => {
+      dotsRef.current.forEach((dot) => {
         dot.update();
-        dot.draw();
+        dot.draw(ctx);
       });
       animationFrameId.current = requestAnimationFrame(animate);
     };
 
+    const debouncedResizeCanvas = debounce(resizeCanvas, 250);
+
     resizeCanvas();
     animate();
 
-    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("resize", debouncedResizeCanvas);
 
     return () => {
-      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("resize", debouncedResizeCanvas);
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [theme]);
+  }, [availableColors, numDots]);
 
   return (
     <canvas

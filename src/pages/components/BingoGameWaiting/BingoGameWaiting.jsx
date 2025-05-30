@@ -38,7 +38,7 @@ const BingoGameWaiting = ({
   const gamePlayers = useMemo(() => gameState?.players || [], [gameState?.players]);
 
   useEffect(() => {
-    setCanStartGame(gamePlayers.length > 0);
+    setCanStartGame(gamePlayers.length >=2);
   }, [gamePlayers]);
 
   const getAvatarColor = (userId) => {
@@ -87,7 +87,7 @@ const BingoGameWaiting = ({
         <Paper
           elevation={6}
           sx={{
-            p: { xs: 2, sm: 3, md: 4 },
+            p: { xs: 2, sm: 3, md: 1 },
             borderRadius: 3,
             width: "100%",
             background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
@@ -138,7 +138,7 @@ const BingoGameWaiting = ({
               isCurrentUserHost={isCurrentUserHost}
               t={t}
             />
-            <Grid container spacing={4} sx={{ mt: 2, flexGrow: 1, overflowY: 'auto' }}>
+            <Grid container spacing={4} sx={{ flexGrow: 1, overflowY: 'auto' }}>
               <Grid item xs={12} md={6} sx={{display: 'flex', flexDirection: 'column'}}>
                 <PlayerListCard
                   gamePlayers={gamePlayers}

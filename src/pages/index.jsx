@@ -1,4 +1,3 @@
-// BingoGame.jsx
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -6,6 +5,7 @@ import {
   Typography,
   Container,
   CircularProgress,
+  Stack,
 } from "@mui/material";
 import {
   EmojiEvents as TrophyIcon,
@@ -17,8 +17,6 @@ import useBingoGame from "../hooks/useBingoGame";
 import Ticket from "./components/Ticket";
 import NumberDisplay from "./components/NumberDisplay";
 import DrawnNumbers from "./components/DrawnNumbers";
-// WinnerDialog is commented out in original, keeping it that way unless needed
-// import WinnerDialog from "./components/WinnerDialog";
 import NotificationSnackbar from "./components/NotificationSnackbar";
 import CountdownScreen from "./components/CountdownScreen";
 import ActiveNumbers from "./components/ActiveNumbers";
@@ -27,6 +25,7 @@ import BingoGameWaiting from "./components/BingoGameWaiting/BingoGameWaiting";
 import CurrentRankings from "./components/CurrentRankings";
 import CompletedPlayers from "./components/CompletedPlayers";
 import GameControls from "./components/GameControls";
+import PlayerDropdownMenu from "./components/PlayerDropdownMenu";
 
 const BingoGame = ({
   members,
@@ -66,7 +65,6 @@ const BingoGame = ({
   const {
     gameState,
     markedNumbers,
-    winnerDetails, // Kept for potential future use with WinnerDialog
     notification,
     countdown,
     completedPlayers,
@@ -79,10 +77,9 @@ const BingoGame = ({
     callBingo,
     handleMarkNumber,
     onGameReset,
-    closeWinnerDialog, // Kept for potential future use
     handleCloseNotification,
     setShowPersonalRankingsDialog,
-    handleCloseRankingsDialog // This is typically onGameReset
+    handleCloseRankingsDialog
   } = useBingoSocket({
     socket,
     lobbyCode,
@@ -138,12 +135,10 @@ const BingoGame = ({
     return <CountdownScreen countdown={countdown} t={t}/>;
   }
 
-  // Main component structure that includes dialogs and snackbar at the top level
+  const gamePlayers = gameState?.players || [];
   return (
     <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
-      {/* Conditional rendering for Waiting Screen OR Game Content */}
       {(!gameState.gameStarted && !showRankingsDialog && !showPersonalRankingsDialog) ? (
-        // Show BingoGameWaiting if game is not started AND no ranking dialogs are meant to be open
         <BingoGameWaiting
           gameState={gameState}
           lobbyInfo={lobbyInfo}
@@ -163,33 +158,48 @@ const BingoGame = ({
           t={t}
         />
       ) : (
-        // Show Game Content Area if game has started OR if a ranking dialog is active (showing final game state behind it)
-        <CardContent sx={{ p: 3 }}>
-          <GameControls
-            secondaryColors={secondaryColors}
-            primaryColors={primaryColors}
-            textColors={textColors}
-            gameState={gameState}
-            hasCompletedBingo={hasCompletedBingo}
-            currentUser={currentUser}
-            drawNumber={drawNumber}
-            isDrawButtonDisabled={isDrawButtonDisabled}
-            callBingo={callBingo}
-            toggleSound={toggleSound}
-            soundEnabled={soundEnabled}
-            t={t}
-          />
+        <CardContent sx={{ p: {xs: 1, sm: 2, md: 3} } }>
+          <Stack
+            direction="row"
+            spacing={1}
+            justifyContent="center"
+            alignItems="center"
+            mb={3}
+            sx={{ flexWrap: 'wrap', gap: 1 }}
+          >
+            <GameControls
+              secondaryColors={secondaryColors}
+              primaryColors={primaryColors}
+              textColors={textColors}
+              gameState={gameState}
+              hasCompletedBingo={hasCompletedBingo}
+              currentUser={currentUser}
+              drawNumber={drawNumber}
+              isDrawButtonDisabled={isDrawButtonDisabled}
+              callBingo={callBingo}
+              toggleSound={toggleSound}
+              soundEnabled={soundEnabled}
+              t={t}
+            />
+            
+            <PlayerDropdownMenu
+              gamePlayers={gamePlayers}
+              lobbyInfo={lobbyInfo}
+              currentUser={currentUser}
+              t={t}
+            />
+          </Stack>
 
           <Box
             sx={{
               display: "flex",
-              flexDirection: "row",
+              flexDirection: { xs: "column", md: "row" },
               flexWrap: "wrap",
               gap: 3,
               marginBottom: 2,
             }}
           >
-            <Box sx={{ flex: "3", minWidth: { xs: '100%', md: '300px'} }}>
+            <Box sx={{ flex: {md: "3"}, width: '100%', minWidth: { xs: '100%', md: '300px'} }}>
               <Typography
                 variant="h6"
                 sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
@@ -206,7 +216,7 @@ const BingoGame = ({
                 t={t}
               />
             </Box>
-            <Box sx={{ flex: "1", minWidth: { xs: '100%', md: '200px'} }}>
+            <Box sx={{ flex: {md: "1"}, width: '100%', minWidth: { xs: '100%', md: '200px'} }}>
               <NumberDisplay
                 currentNumber={gameState.currentNumber}
                 theme={theme}
@@ -228,7 +238,7 @@ const BingoGame = ({
             align="center"
             sx={{ mt: 1, mb: 2 }}
           >
-            {gameState.drawnNumbers.length}/{gameState.bingoMode === 'classic' || gameState.bingoMode === 'customClassic' ? 90 : 75} {t("Drawn Numbers")} {/* Adjusted for different bingo modes potentially */}
+            {gameState.drawnNumbers.length}/{gameState.bingoMode === 'classic' || gameState.bingoMode === 'customClassic' ? 90 : 90} {t("Drawn Numbers")}
           </Typography>
           <CompletedPlayers completedPlayers={completedPlayers} t={t}/>
 
@@ -247,42 +257,31 @@ const BingoGame = ({
         </CardContent>
       )}
 
-      {/* Universal Notification Snackbar */}
       <NotificationSnackbar
         open={notification.open}
         message={notification.message}
         severity={notification.severity}
         onClose={handleCloseNotification}
       />
-
-      {/* WinnerDialog was commented out, ensure it's handled similarly if re-enabled
-      <WinnerDialog
-        winnerDetails={winnerDetails}
-        currentUser={currentUser}
-        onClose={closeWinnerDialog}
-        t={t}
-      /> */}
-
-      {/* Rankings Dialogs */}
       <RankingsDialog
         open={showRankingsDialog}
-        onClose={handleCloseRankingsDialog} // This is onGameReset for the main rankings
+        onClose={handleCloseRankingsDialog}
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
-        onGameReset={onGameReset} // For "Play Again" button
+        onGameReset={onGameReset}
         gameId={gameState.gameId}
         t={t}
       />
       <RankingsDialog
         open={showPersonalRankingsDialog}
-        onClose={() => setShowPersonalRankingsDialog(false)} // This closes without full game reset
+        onClose={() => setShowPersonalRankingsDialog(false)}
         rankings={gameState.rankings}
         gameState={gameState}
         lobbyCode={lobbyCode}
         dialogTitle={t("Your Rank")}
         showCloseButton={true}
-        onGameReset={onGameReset} // "Play Again" might not be typical here but prop exists
+        onGameReset={onGameReset}
         gameId={gameState.gameId}
         t={t}
       />

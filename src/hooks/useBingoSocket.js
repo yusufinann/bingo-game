@@ -4,7 +4,7 @@ const useBingoSocket = ({
   socket,
   lobbyCode,
   currentUser,
-  members,
+
   playSoundCallback,
   t,
 }) => {
@@ -17,7 +17,7 @@ const useBingoSocket = ({
     gameStarted: false,
     gameEnded: false,
     winner: null,
-    players: [],
+    players: [], // Artık { id, name, userName, avatar, ... } formatında olacak
     message: "",
     drawMode: "auto",
     drawer: null,
@@ -33,7 +33,7 @@ const useBingoSocket = ({
     message: "",
     severity: "info",
   });
-  const [completedPlayers, setCompletedPlayers] = useState([]);
+  const [completedPlayers, setCompletedPlayers] = useState([]); // { id, name, avatar, completedAt }
   const [hasCompletedBingo, setHasCompletedBingo] = useState(false);
   const [showRankingsDialog, setShowRankingsDialog] = useState(false);
   const [showPersonalRankingsDialog, setShowPersonalRankingsDialog] =
@@ -127,7 +127,7 @@ const useBingoSocket = ({
       JSON.stringify({
         type: "BINGO_JOIN",
         lobbyCode,
-        playerId: currentUser?.id,
+        playerId: currentUser?.id, 
       })
     );
 
@@ -150,7 +150,7 @@ const useBingoSocket = ({
             ...prev,
             gameId: data.gameId,
             ticket: data.ticket || null,
-            players: data.players || [],
+            players: data.players || [], 
             message: data.message,
             gameStarted: data.gameStarted,
             drawnNumbers: data.drawnNumbers || [],
@@ -167,13 +167,13 @@ const useBingoSocket = ({
           if (data.markedNumbers) {
             setMarkedNumbers(data.markedNumbers);
           }
-          setCompletedPlayers(data.completedPlayers || []);
+          setCompletedPlayers(data.completedPlayers || []); 
 
           if (data.completedBingo !== undefined) {
             setHasCompletedBingo(data.completedBingo);
           } else if (currentUser?.id && Array.isArray(data.completedPlayers)) {
             const amICompleted = data.completedPlayers.some(
-              (p) => String(p.id || p.userId) === String(currentUser.id)
+              (p) => String(p.id) === String(currentUser.id) 
             );
             setHasCompletedBingo(amICompleted);
           } else {
@@ -201,9 +201,9 @@ const useBingoSocket = ({
 
         case "BINGO_PLAYER_COMPLETED":
             setCompletedPlayers(prev => {
-                const playerExists = prev.some(p => String(p.id || p.userId) === String(data.playerId));
+                const playerExists = prev.some(p => String(p.id) === String(data.playerId)); 
                 if (playerExists) {
-                    return prev.map(p => String(p.id || p.userId) === String(data.playerId) ? { ...p, name: data.playerName, avatar: data.avatar, completedAt: data.completedAt || p.completedAt } : p);
+                    return prev.map(p => String(p.id) === String(data.playerId) ? { ...p, id: data.playerId, name: data.playerName, avatar: data.avatar, completedAt: data.completedAt || p.completedAt } : p);
                 }
                 return [...prev, { id: data.playerId, name: data.playerName, avatar: data.avatar, completedAt: data.completedAt }];
             });
@@ -214,16 +214,16 @@ const useBingoSocket = ({
                   severity: "success",
               });
             }
-             if (String(data.playerId) === String(currentUser?.id)) {
+             if (String(data.playerId) === String(currentUser?.id)) { 
                 setHasCompletedBingo(true);
             }
             break;
 
-        case "BINGO_PLAYER_JOINED":
+        case "BINGO_PLAYER_JOINED": 
           setGameState((prev) => ({
             ...prev,
-            players: prev.players.some((p) => String(p.id || p.userId) === String(data.player.id || data.player.userId))
-              ? prev.players.map(p => String(p.id || p.userId) === String(data.player.id || data.player.userId) ? data.player : p)
+            players: prev.players.some((p) => String(p.id) === String(data.player.id))
+              ? prev.players.map(p => String(p.id) === String(data.player.id) ? data.player : p)
               : [...prev.players, data.player],
           }));
           if (data.notification) {
@@ -259,7 +259,7 @@ const useBingoSocket = ({
             bingoMode: data.bingoMode || "classic",
             gameId: data.gameId,
             competitionMode: data.competitionMode || "competitive",
-            players: data.players || prev.players,
+            players: data.players || prev.players, 
             drawnNumbers: [],
             activeNumbers: [],
             currentNumber: null,
@@ -267,7 +267,7 @@ const useBingoSocket = ({
           }));
 
           if (data.players && currentUser?.id) {
-            const myPlayerData = data.players.find(p => String(p.playerId) === String(currentUser.id));
+            const myPlayerData = data.players.find(p => String(p.id) === String(currentUser.id)); 
             if (myPlayerData) {
               setGameState(prev => ({ ...prev, ticket: myPlayerData.ticket || null }));
               setCurrentPlayerColor(myPlayerData.color || null);
@@ -308,25 +308,6 @@ const useBingoSocket = ({
           }));
           break;
 
-        case "BINGO_WIN":
-          setGameState((prev) => ({
-            ...prev,
-            gameEnded: true,
-            winner: data.winner,
-            message: data.message,
-            rankings: data.finalRankings || data.rankings || prev.rankings,
-          }));
-          const winningMember = members.find(
-            (m) => String(m.id) === String(data.winner)
-          );
-          setWinnerDetails({
-            id: data.winner,
-            name: winningMember?.name || data.winnerName || "Unknown Player",
-          });
-          playSoundCallback("win");
-          if (data.finalRankings) setShowRankingsDialog(true);
-          break;
-
         case "BINGO_INVALID":
           playSoundCallback("wrongBingo");
           setNotification({
@@ -342,15 +323,15 @@ const useBingoSocket = ({
             drawnNumbers: data.drawnNumbers !== undefined ? data.drawnNumbers : prev.drawnNumbers,
             activeNumbers: data.activeNumbers !== undefined ? data.activeNumbers : prev.activeNumbers,
             currentNumber: data.currentNumber !== undefined ? data.currentNumber : prev.currentNumber,
-            players: data.players !== undefined ? data.players : prev.players,
+            players: data.players !== undefined ? data.players : prev.players, 
             rankings: data.rankings !== undefined ? data.rankings : prev.rankings,
             gameStarted: data.gameStarted !== undefined ? data.gameStarted : prev.gameStarted,
             gameEnded: data.gameEnded !== undefined ? data.gameEnded : prev.gameEnded,
           }));
-          setCompletedPlayers(data.completedPlayers || []);
+          setCompletedPlayers(data.completedPlayers || []); 
           if (data.completedPlayers && currentUser?.id) {
             const amICompleted = data.completedPlayers.some(
-              (p) => String(p.id || p.userId) === String(currentUser.id)
+              (p) => String(p.id) === String(currentUser.id) 
             );
             setHasCompletedBingo(amICompleted);
           }
@@ -365,16 +346,22 @@ const useBingoSocket = ({
             ...prev,
             gameEnded: true,
             gameStarted: false,
-            rankings: data.finalRankings || [],
+            rankings: data.finalRankings || [], 
           }));
 
-          const allPlayersFromRankings = data.finalRankings ? data.finalRankings.map(p => ({id: p.playerId, name: p.userName, avatar: p.avatar, completedAt: p.completedAt })) : [];
+          const allPlayersFromRankings = data.finalRankings ? data.finalRankings.map(p => ({
+              id: p.playerId, 
+              name: p.name || p.userName, 
+              userName: p.userName,
+              avatar: p.avatar,
+              completedAt: p.completedAt
+            })) : [];
           setCompletedPlayers(allPlayersFromRankings.filter(p => !!p.completedAt));
 
           if (data.finalRankings && data.finalRankings.length > 0) {
             const winnerData = data.finalRankings[0];
             setWinnerDetails({
-              id: winnerData.playerId,
+              id: winnerData.playerId, 
               name: winnerData.userName || "Unknown Player",
               avatar: winnerData.avatar
             });
@@ -395,10 +382,10 @@ const useBingoSocket = ({
           });
           break;
 
-        case "BINGO_PLAYER_LEFT":
+        case "BINGO_PLAYER_LEFT": 
           setGameState(prev => ({
             ...prev,
-            players: prev.players.filter(p => String(p.id || p.userId || p.playerId) !== String(data.playerId))
+            players: prev.players.filter(p => String(p.id) !== String(data.playerId))
           }));
           if (data.notification) {
             setNotification({
@@ -422,7 +409,6 @@ const useBingoSocket = ({
     socket,
     lobbyCode,
     currentUser,
-    members,
     playSoundCallback,
     t,
     initialJoinNotificationShown,
