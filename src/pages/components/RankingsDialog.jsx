@@ -1,25 +1,29 @@
 import React, { useState } from 'react';
 import {
-  TableBody,
-  TableCell,
-  Table,
-  TableHead,
   Button,
   Dialog,
   DialogTitle,
-  TableRow,
   DialogContent,
   DialogActions,
-  DialogContentText,
   Typography,
   Box,
   Paper,
   Chip,
   Zoom,
-  Grow,
   useTheme,
+  Avatar,
+  Stack,
+  Divider,
+  Card,
+  CardContent,
+  Fade,
+  Slide,
+  IconButton,
+  Tooltip,
+  LinearProgress,
+  Badge
 } from "@mui/material";
-import { styled } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
 import GamesIcon from '@mui/icons-material/Games';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsScoreIcon from '@mui/icons-material/SportsScore';
@@ -28,96 +32,132 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import PersonIcon from '@mui/icons-material/Person';
+import CloseIcon from '@mui/icons-material/Close';
+import StarIcon from '@mui/icons-material/Star';
+import TimerIcon from '@mui/icons-material/Timer';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
 
-const StyledTableRow = styled(TableRow)(({ theme, rank }) => ({
-  transition: 'all 0.3s ease',
-  backgroundColor: rank === 1
-    ? 'rgba(255, 215, 0, 0.15)'
+const RankingCard = styled(Card)(({ theme, rank }) => ({
+  marginBottom: theme.spacing(1.5),
+  background: rank === 1
+    ? `linear-gradient(135deg, ${alpha('#FFD700', 0.1)} 0%, ${alpha('#FFA500', 0.05)} 100%)`
     : rank === 2
-    ? 'rgba(192, 192, 192, 0.1)'
+    ? `linear-gradient(135deg, ${alpha('#C0C0C0', 0.1)} 0%, ${alpha('#808080', 0.05)} 100%)`
     : rank === 3
-    ? 'rgba(205, 127, 50, 0.1)'
-    : 'inherit',
+    ? `linear-gradient(135deg, ${alpha('#CD7F32', 0.1)} 0%, ${alpha('#8B4513', 0.05)} 100%)`
+    : theme.palette.background.paper,
+  border: rank <= 3 ? `2px solid ${
+    rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32'
+  }` : `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+  borderRadius: theme.spacing(1.5),
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
-    backgroundColor: rank === 1
-      ? 'rgba(255, 215, 0, 0.3)'
-      : rank === 2
-      ? 'rgba(192, 192, 192, 0.2)'
-      : rank === 3
-      ? 'rgba(205, 127, 50, 0.2)'
-      : theme.palette.action.selected,
-    transform: 'scale(1.01)',
-  },
-}));
-
-const StatusChip = styled(Chip)(({ theme, status }) => ({
-  fontWeight: 'bold',
-  backgroundColor: status === 'Completed'
-    ? theme.palette.success.light
-    : theme.palette.info.light,
-  color: status === 'Completed'
-    ? theme.palette.success.contrastText
-    : theme.palette.info.contrastText,
-}));
-
-const RankBadge = styled(Box)(({ theme, rank, isTied }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: '50%',
-  width: 40,
-  height: 40,
-  color: '#fff',
-  fontWeight: 'bold',
-  fontSize: '1.1rem',
-  backgroundColor:
-    rank === 1 ? '#FFD700' :
-    rank === 2 ? '#C0C0C0' :
-    rank === 3 ? '#CD7F32' :
-    theme.palette.grey[500],
-  border: isTied ? '3px solid rgba(255,255,255,0.8)' : 'none',
-  boxShadow: isTied ? '0 0 12px rgba(0,0,0,0.3)' : 'none',
-}));
-
-const PlayerChip = styled(Chip)(({ theme, rank }) => ({
-  margin: '2px',
-  fontWeight: rank <= 3 ? 'bold' : 'normal',
-  backgroundColor: 
-    rank === 1 ? 'rgba(255, 215, 0, 0.2)' :
-    rank === 2 ? 'rgba(192, 192, 192, 0.2)' :
-    rank === 3 ? 'rgba(205, 127, 50, 0.2)' :
-    theme.palette.grey[100],
-  '&:hover': {
-    backgroundColor: 
-      rank === 1 ? 'rgba(255, 215, 0, 0.3)' :
-      rank === 2 ? 'rgba(192, 192, 192, 0.3)' :
-      rank === 3 ? 'rgba(205, 127, 50, 0.3)' :
-      theme.palette.grey[200],
+    transform: 'translateY(-3px)',
+    boxShadow: rank <= 3
+      ? `0 10px 20px ${alpha(rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32', 0.25)}`
+      : theme.shadows[6],
   }
 }));
 
-const ScoreBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(1),
+const RankBadge = styled(Avatar)(({ theme, rank }) => ({
+  width: 52,
+  height: 52,
+  fontSize: '1.3rem',
   fontWeight: 'bold',
-  fontSize: '1.2rem',
+  background: rank === 1
+    ? 'linear-gradient(45deg, #FFD700 30%, #FFA500 90%)'
+    : rank === 2
+    ? 'linear-gradient(45deg, #C0C0C0 30%, #808080 90%)'
+    : rank === 3
+    ? 'linear-gradient(45deg, #CD7F32 30%, #8B4513 90%)'
+    : `linear-gradient(45deg, ${theme.palette.grey[400]} 30%, ${theme.palette.grey[600]} 90%)`,
+  color: '#fff',
+  boxShadow: rank <= 3 ? `0 3px 10px ${alpha('#000', 0.25)}` : theme.shadows[1],
+  border: rank === 1 ? '2px solid rgba(255, 255, 255, 0.5)' : 'none'
 }));
 
-const TiedLabel = styled(Chip)(({ theme }) => ({
-  backgroundColor: theme.palette.warning.light,
-  color: theme.palette.warning.contrastText,
-  fontSize: '0.75rem',
-  height: '22px',
-  fontWeight: 'bold',
+const PlayerChip = styled(Chip)(({ theme, rank, completed }) => ({
+  margin: theme.spacing(0.25),
+  padding: theme.spacing(0.25),
+  height: 'auto',
+  '& .MuiChip-label': {
+    padding: theme.spacing(1),
+    fontWeight: rank <= 3 ? 'bold' : 'medium',
+    fontSize: '0.8rem'
+  },
+  background: completed
+    ? alpha(theme.palette.success.main, 0.1)
+    : alpha(theme.palette.grey[500], 0.1),
+  border: completed
+    ? `1px solid ${alpha(theme.palette.success.main, 0.3)}`
+    : `1px solid ${alpha(theme.palette.grey[500], 0.2)}`,
+  '&:hover': {
+    transform: 'scale(1.03)',
+    background: completed
+      ? alpha(theme.palette.success.main, 0.2)
+      : alpha(theme.palette.grey[500], 0.2),
+  }
+}));
+
+const StatusIndicator = styled(Box)(({ theme, status }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(0.5),
+  padding: theme.spacing(0.5, 1.5),
+  borderRadius: theme.spacing(2.5),
+  fontSize: '0.8rem',
+  fontWeight: 'medium',
+  background: status === 'Completed'
+    ? alpha(theme.palette.success.main, 0.1)
+    : status === 'Mixed'
+    ? alpha(theme.palette.warning.main, 0.1)
+    : alpha(theme.palette.info.main, 0.1),
+  color: status === 'Completed'
+    ? theme.palette.success.main
+    : status === 'Mixed'
+    ? theme.palette.warning.main
+    : theme.palette.info.main,
+  border: `1px solid ${status === 'Completed'
+    ? alpha(theme.palette.success.main, 0.3)
+    : status === 'Mixed'
+    ? alpha(theme.palette.warning.main, 0.3)
+    : alpha(theme.palette.info.main, 0.3)}`
 }));
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
-  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
   color: theme.palette.primary.contrastText,
+  padding: theme.spacing(1.5, 2),
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+    animation: 'shimmer 3s infinite',
+  },
+  '@keyframes shimmer': {
+    '0%': { transform: 'translateX(-100%)' },
+    '100%': { transform: 'translateX(100%)' }
+  }
+}));
+
+const ScoreDisplay = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: theme.spacing(1.5),
+  gap: theme.spacing(0.5),
+  padding: theme.spacing(0.75, 1.5),
+  borderRadius: theme.spacing(1),
+  background: alpha(theme.palette.primary.main, 0.1),
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+  fontWeight: 'bold',
+  fontSize: '1rem',
+  color: theme.palette.primary.main
 }));
 
 const RankingsDialog = ({
@@ -127,14 +167,13 @@ const RankingsDialog = ({
   gameState,
   lobbyCode,
   onGameReset,
-  dialogTitle = 'Game Rankings',
+  dialogTitleKey = 'rankingsDialog.title',
   showCloseButton = true,
-  t = (text) => text
+  t = (key, options) => key
 }) => {
   const [confirmClose, setConfirmClose] = useState(false);
   const theme = useTheme();
 
-  // Aynı rank'e sahip oyuncuları grupla
   const groupedRankings = React.useMemo(() => {
     const rankGroups = {};
     rankings.forEach(player => {
@@ -145,47 +184,62 @@ const RankingsDialog = ({
       rankGroups[rank].push(player);
     });
 
-    // Her rank için bir satır oluştur
     return Object.keys(rankGroups)
       .sort((a, b) => parseInt(a) - parseInt(b))
       .map(rank => {
         const players = rankGroups[rank];
         const isTied = players.length > 1;
-        
+        const completedCount = players.filter(p => p.completedAt).length;
+        const totalCountInGroup = players.length;
+
         return {
           rank: parseInt(rank),
           players: players,
           isTied: isTied,
-          score: players[0].score, // Aynı score olduğu için ilkini al
+          score: players[0].score,
           allCompleted: players.every(p => p.completedAt),
-          someCompleted: players.some(p => p.completedAt)
+          someCompleted: players.some(p => p.completedAt),
+          completedCount,
+          totalCount: totalCountInGroup,
+          completionPercentage: totalCountInGroup > 0 ? (completedCount / totalCountInGroup) * 100 : 0
         };
       });
   }, [rankings]);
 
   const getRankIcon = (rank) => {
     switch(rank) {
-      case 1: return <EmojiEventsIcon sx={{ color: '#FFD700' }} />;
-      case 2: return <MilitaryTechIcon sx={{ color: '#C0C0C0' }} />;
-      case 3: return <MilitaryTechIcon sx={{ color: '#CD7F32' }} />;
-      default: return <SportsMartialArtsIcon color="action" />;
+      case 1: return <EmojiEventsIcon sx={{ color: '#FFD700', fontSize: '1.75rem' }} />;
+      case 2: return <MilitaryTechIcon sx={{ color: '#C0C0C0', fontSize: '1.25rem' }} />;
+      case 3: return <MilitaryTechIcon sx={{ color: '#CD7F32', fontSize: '1.25rem' }} />;
+      default: return <SportsMartialArtsIcon color="action" sx={{ fontSize: '1.25rem' }} />;
     }
   };
 
-  const getStatusForGroup = (group) => {
-    if (group.allCompleted) return 'Completed';
-    if (group.someCompleted) return 'Mixed';
-    return 'In Progress';
+  const getStatusInfo = (group) => {
+    if (group.allCompleted) {
+      return {
+        status: 'Completed',
+        icon: <CheckCircleIcon fontSize="small" />,
+        text: t('rankingsDialog.statusCompleted')
+      };
+    }
+    if (group.someCompleted) {
+      return {
+        status: 'Mixed',
+        icon: <TimerIcon fontSize="small" />,
+        text: t('rankingsDialog.statusMixed')
+      };
+    }
+    return {
+      status: 'In Progress',
+      icon: <PendingIcon fontSize="small" />,
+      text: t('rankingsDialog.statusInProgress')
+    };
   };
 
-  const getStatusChipColor = (status) => {
-    switch(status) {
-      case 'Completed': return 'success';
-      case 'Mixed': return 'warning';
-      case 'In Progress': return 'info';
-      default: return 'default';
-    }
-  };
+  const getTotalPlayers = () => rankings.length;
+  const getCompletedPlayers = () => rankings.filter(r => r.completedAt).length;
+
 
   return (
     <>
@@ -195,176 +249,316 @@ const RankingsDialog = ({
         fullWidth
         onClose={onClose}
         TransitionComponent={Zoom}
-        transitionDuration={500}
+        transitionDuration={600}
         PaperProps={{
-          elevation: 12,
+          elevation: 24,
           sx: {
             borderRadius: 2,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            maxHeight: '90vh'
           }
         }}
       >
         <StyledDialogTitle>
-          <GamesIcon fontSize="large" />
-          <Typography variant="h5" component="span" sx={{ fontWeight: 'bold' }}>
-            {t(dialogTitle)}
-          </Typography>
-          {lobbyCode && (
-            <Chip
-              label={`${t('Lobby')}: ${lobbyCode}`}
-              color="default"
-              size="small"
-              sx={{ ml: 'auto', backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
-            />
-          )}
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <GamesIcon sx={{ fontSize: '2rem' }} />
+              <Box>
+                <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', mb: 0.25 }}>
+                  {t(dialogTitleKey)}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  {getCompletedPlayers()}/{getTotalPlayers()} {t("Player Completed")}
+                </Typography>
+              </Box>
+            </Stack>
+
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {lobbyCode && (
+                <Chip
+                  label={`Lobby: ${lobbyCode}`}
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    color: 'white',
+                    fontWeight: 'medium'
+                  }}
+                />
+              )}
+              <Tooltip title="Kapat">
+                <IconButton
+                  onClick={onClose}
+                  sx={{ color: 'white' }}
+                  size="medium"
+                >
+                  <CloseIcon fontSize="medium" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Stack>
         </StyledDialogTitle>
 
-        <DialogContent sx={{ p: { xs: 1, sm: 2 } }}>
-          <Paper elevation={3} sx={{ borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: theme.palette.primary.dark }}>
-                  <TableCell sx={{ fontWeight: 'bold', width: '80px' }}>{t("Rank")}</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>{t("Players")}</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', width: '100px' }}>{t("Score")}</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', width: '120px' }}>{t("Status")}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {groupedRankings.map((group, index) => (
-                  <Grow in={true} timeout={500 + (index * 150)} key={group.rank}>
-                    <StyledTableRow rank={group.rank}>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexDirection: 'column' }}>
-                          <RankBadge rank={group.rank} isTied={group.isTied}>
-                            {group.rank}
+        <DialogContent sx={{ p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.02) }}>
+          <Paper
+            elevation={2}
+            sx={{
+              p: 1.5,
+              mb: 2,
+              borderRadius: 1.5,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`
+            }}
+          >
+          </Paper>
+
+          <Stack spacing={1.5}>
+            {groupedRankings.map((group, index) => {
+              const statusInfo = getStatusInfo(group);
+
+              return (
+                <Fade
+                  in={true}
+                  timeout={600 + (index * 150)}
+                  key={group.rank}
+                >
+                  <RankingCard rank={group.rank} elevation={group.rank <= 3 ? 4 : 1}>
+                    <CardContent sx={{ p: 1.5 }}>
+                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Box sx={{ position: 'relative', minWidth: 52 }}>
+                          <RankBadge rank={group.rank}>
+                            #{group.rank}
                           </RankBadge>
+                          {group.rank === 1 && (
+                            <StarIcon
+                              sx={{
+                                position: 'absolute',
+                                top: -6,
+                                right: -6,
+                                color: '#FFD700',
+                                fontSize: '1.2rem',
+                                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
+                              }}
+                            />
+                          )}
                           {group.isTied && (
-                            <TiedLabel 
-                              label={`${group.players.length} tied`}
-                              size="small"
+                            <Badge
+                              badgeContent="TIE"
+                              color="warning"
+                              sx={{
+                                position: 'absolute',
+                                bottom: -8,
+                                right: -8,
+                                '& .MuiBadge-badge': {
+                                  fontSize: '0.5rem',
+                                  minWidth: '28px',
+                                  height: '14px',
+                                  padding: '0 4px'
+                                }
+                              }}
                             />
                           )}
                         </Box>
-                      </TableCell>
-                      
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                          {getRankIcon(group.rank)}
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+
+                        <Box sx={{ flex: 1 }}>
+                          <Stack direction="row" alignItems="center" spacing={0.5}>
+                            {getRankIcon(group.rank)}
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              {group.isTied ? `${group.players.length} Oyuncu Beraberlikte` : 'Oyuncu'}
+                            </Typography>
+                          </Stack>
+
+                          <Stack direction="row" flexWrap="wrap" gap={0.5} mb={1}>
                             {group.players.map((player, playerIndex) => (
                               <PlayerChip
                                 key={player.playerId || playerIndex}
                                 rank={group.rank}
-                                label={player.userName || player.name || `Player ${player.playerId}`}
-                                size="small"
-                                icon={<PersonIcon />}
+                                completed={Boolean(player.completedAt)}
+                                icon={<PersonIcon sx={{ fontSize: '0.9rem' }} />}
+                                label={
+                                  <Typography  variant="h2" fontWeight="inherit" sx={{ display: 'flex',fontSize:'0.9rem', alignItems: 'center' }}>
+                                    {player.userName || player.name || `Oyuncu ${player.playerId}`}
+                                    {player.completedAt && (
+                                      <CheckCircleIcon
+                                        sx={{ fontSize: '0.9rem', color: theme.palette.success.main, ml: 0.5 }}
+                                      />
+                                    )}
+                                  </Typography>
+                                }
                                 variant={player.completedAt ? "filled" : "outlined"}
+                                size="small"
                               />
                             ))}
-                          </Box>
+                          </Stack>
+
+                          {group.someCompleted && !group.allCompleted && (
+                            <Box sx={{ mb: 0.5 }}>
+                              <Stack direction="row" justifyContent="space-between" mb={0.25}>
+                                <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
+                                  {t("Completed")}: {group.completedCount}/{group.totalCount}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
+                                  {Math.round(group.completionPercentage)}%
+                                </Typography>
+                              </Stack>
+                              <LinearProgress
+                                variant="determinate"
+                                value={group.completionPercentage}
+                                sx={{
+                                  height: 3,
+                                  borderRadius: 1.5,
+                                  backgroundColor: alpha(theme.palette.grey[500], 0.2)
+                                }}
+                              />
+                            </Box>
+                          )}
                         </Box>
-                      </TableCell>
-                      
-                      <TableCell>
-                        <ScoreBox>
-                          <SportsScoreIcon color="action" />
-                          {group.score}
-                        </ScoreBox>
-                      </TableCell>
-                      
-                      <TableCell>
-                        <StatusChip
-                          label={t(getStatusForGroup(group))}
-                          color={getStatusChipColor(getStatusForGroup(group))}
-                          size="small"
-                          icon={group.allCompleted ? <SportsScoreIcon /> : undefined}
-                        />
-                        {group.isTied && getStatusForGroup(group) === 'Mixed' && (
-                          <Typography variant="caption" display="block" color="text.secondary">
-                            {group.players.filter(p => p.completedAt).length}/{group.players.length} completed
-                          </Typography>
-                        )}
-                      </TableCell>
-                    </StyledTableRow>
-                  </Grow>
-                ))}
-              </TableBody>
-            </Table>
-          </Paper>
+
+                        <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+
+                        <Stack alignItems="center" spacing={1} sx={{ minWidth: 120 }}>
+                          <ScoreDisplay>
+                            <SportsScoreIcon fontSize="medium" />
+                            <Typography variant="h3">
+                              {group.score}
+                            </Typography>
+                          </ScoreDisplay>
+
+                          <StatusIndicator status={statusInfo.status}>
+                            {React.cloneElement(statusInfo.icon, { sx: { fontSize: '1rem' }})}
+                            <Typography variant="subtitle1" fontWeight="medium">
+                              {statusInfo.text}
+                            </Typography>
+                          </StatusIndicator>
+                        </Stack>
+                      </Stack>
+                    </CardContent>
+                  </RankingCard>
+                </Fade>
+              );
+            })}
+          </Stack>
 
           {gameState?.gameEnded && (
-            <Box sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              p: 2,
-              bgcolor:'rgba(0, 0, 0, 0.04)',
-              borderRadius: 2,
-              alignItems: 'center',
-              gap: 1,
-              mt: 2
-            }}>
-              <EmojiEventsIcon color="primary" />
-              <Typography variant="h6" color="text.primary">
-                {t('Game Complete! Well played everyone!')}
-              </Typography>
-            </Box>
+            <Slide direction="up" in={true} timeout={800}>
+              <Paper
+                elevation={6}
+                sx={{
+                  mt: 2,
+                  p: 1,
+                  textAlign: 'center',
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.primary.main, 0.1)} 100%)`,
+                  border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                  borderRadius: 2
+                }}
+              >
+                <Stack alignItems="center" spacing={1}>
+                  <Typography variant="h3" fontWeight="bold" color="success.main">
+                    🎉 {t('rankingsDialog.gameCompleteMessage')} 🎉
+                  </Typography>
+                </Stack>
+              </Paper>
+            </Slide>
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 2, justifyContent: 'space-between', bgcolor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100] }}>
-          {gameState?.gameEnded && onGameReset && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<RestartAltIcon />}
-              onClick={onGameReset}
-            >
-              {t('Play Again')}
-            </Button>
-          )}
-
-          <Box sx={{ ml: 'auto' }}>
-            {showCloseButton && (
+        <DialogActions
+          sx={{
+            p: 1.5,
+            backgroundColor: alpha(theme.palette.grey[100], 0.5),
+            borderTop: `1px solid ${alpha(theme.palette.divider, 0.12)}`
+          }}
+        >
+          <Stack direction="row" justifyContent="space-between" width="100%">
+            {gameState?.gameEnded && onGameReset && (
               <Button
-                onClick={() => {
-                  if (gameState && !gameState.gameEnded && rankings.some(r => !r.completedAt)) {
-                    setConfirmClose(true);
-                  } else {
-                    onClose();
-                  }
+                variant="contained"
+                color="primary"
+                size="medium"
+                startIcon={<RestartAltIcon />}
+                onClick={onGameReset}
+                sx={{
+                  borderRadius: 1.5,
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  px: 2.5
                 }}
-                variant="outlined"
-                color="secondary"
-                startIcon={<CancelIcon />}
               >
-                {t('Close')}
+                {t('rankingsDialog.playAgainButton')}
               </Button>
             )}
-          </Box>
+
+            <Box sx={{ ml: 'auto' }}>
+              {showCloseButton && (
+                <Button
+                  onClick={() => {
+                    if (gameState && !gameState.gameEnded && rankings.some(r => !r.completedAt)) {
+                      setConfirmClose(true);
+                    } else {
+                      onClose();
+                    }
+                  }}
+                  variant="outlined"
+                  color="secondary"
+                  size="medium"
+                  startIcon={<CancelIcon />}
+                  sx={{
+                    borderRadius: 1.5,
+                    textTransform: 'none',
+                    fontWeight: 'bold',
+                    px: 2.5
+                  }}
+                >
+                  {t('rankingsDialog.closeButton')}
+                </Button>
+              )}
+            </Box>
+          </Stack>
         </DialogActions>
       </Dialog>
 
       <Dialog
         open={confirmClose}
         onClose={() => setConfirmClose(false)}
-        PaperProps={{ elevation: 8, sx: { borderRadius: 2 } }}
+        PaperProps={{
+          elevation: 10,
+          sx: {
+            borderRadius: 2,
+            minWidth: 360
+          }
+        }}
+        TransitionComponent={Slide}
+        TransitionProps={{ direction: "up" }}
       >
-        <DialogTitle sx={{ bgcolor: theme.palette.warning.main, color: theme.palette.warning.contrastText }}>
-          {t('Confirm Close')}
+        <DialogTitle
+          sx={{
+            bgcolor: theme.palette.warning.main,
+            color: theme.palette.warning.contrastText,
+            textAlign: 'center',
+            p: 1.5
+          }}
+        >
+          <Stack alignItems="center" spacing={0.5}>
+            <CancelIcon sx={{ fontSize: '1.75rem' }} />
+            <Typography variant="h6" fontWeight="bold">
+              {t('rankingsDialog.confirmCloseDialog.title')}
+            </Typography>
+          </Stack>
         </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText>
-            {t('The game is still in progress. Are you sure you want to close? Your current game state might not be saved if you proceed.')}
-          </DialogContentText>
+
+        <DialogContent sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="body1" color="text.secondary">
+            {t('rankingsDialog.confirmCloseDialog.message')}
+          </Typography>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+
+        <DialogActions sx={{ p: 1.5, justifyContent: 'center', gap: 1.5 }}>
           <Button
             onClick={() => setConfirmClose(false)}
-            color="inherit"
             variant="outlined"
+            color="inherit"
+            size="medium"
+            sx={{ borderRadius: 1.5, textTransform: 'none', minWidth: 100 }}
           >
-            {t('Cancel')}
+            {t('rankingsDialog.cancelButton')}
           </Button>
           <Button
             onClick={() => {
@@ -376,9 +570,11 @@ const RankingsDialog = ({
             }}
             color="error"
             variant="contained"
+            size="medium"
             startIcon={<CancelIcon />}
+            sx={{ borderRadius: 1.5, textTransform: 'none', minWidth: 100 }}
           >
-            {t('Close Anyway')}
+            {t('rankingsDialog.closeAnywayButton')}
           </Button>
         </DialogActions>
       </Dialog>
