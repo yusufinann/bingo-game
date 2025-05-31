@@ -22,7 +22,6 @@ import CountdownScreen from "./components/CountdownScreen";
 import ActiveNumbers from "./components/ActiveNumbers";
 import RankingsDialog from "./components/RankingsDialog";
 import BingoGameWaiting from "./components/BingoGameWaiting/BingoGameWaiting";
-import CurrentRankings from "./components/CurrentRankings";
 import CompletedPlayers from "./components/CompletedPlayers";
 import GameControls from "./components/GameControls";
 import PlayerDropdownMenu from "./components/PlayerDropdownMenu";
@@ -137,7 +136,7 @@ const BingoGame = ({
 
   const gamePlayers = gameState?.players || [];
   return (
-    <Container maxWidth="100%" style={{ width: "100%", height: "100%" }}>
+    <Container  sx={{ width: "100%", height: "100%",py: 2,overflow: 'auto' }}>
       {(!gameState.gameStarted && !showRankingsDialog && !showPersonalRankingsDialog) ? (
         <BingoGameWaiting
           gameState={gameState}
@@ -241,19 +240,6 @@ const BingoGame = ({
             {gameState.drawnNumbers.length}/{gameState.bingoMode === 'classic' || gameState.bingoMode === 'customClassic' ? 90 : 90} {t("Drawn Numbers")}
           </Typography>
           <CompletedPlayers completedPlayers={completedPlayers} t={t}/>
-
-          {gameState.gameStarted &&
-            !gameState.gameEnded &&
-            gameState.rankings &&
-            gameState.rankings.length > 0 &&
-            completedPlayers &&
-            completedPlayers.length > 0 && (
-              <CurrentRankings
-                rankings={gameState.rankings}
-                completedPlayers={completedPlayers}
-                t={t}
-              />
-            )}
         </CardContent>
       )}
 

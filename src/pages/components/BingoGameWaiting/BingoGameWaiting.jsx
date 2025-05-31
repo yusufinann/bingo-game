@@ -67,10 +67,11 @@ const BingoGameWaiting = ({
 
   return (
     <Container
-      maxWidth="lg"
+     maxWidth="md"
       sx={{
         py: { xs: 2, md: 4 },
         height:"100%",
+        flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
       }}
