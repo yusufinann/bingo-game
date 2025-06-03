@@ -19,7 +19,6 @@ import NumberDisplay from "./components/NumberDisplay";
 import DrawnNumbers from "./components/DrawnNumbers";
 import NotificationSnackbar from "./components/NotificationSnackbar";
 import CountdownScreen from "./components/CountdownScreen";
-import ActiveNumbers from "./components/ActiveNumbers";
 import RankingsDialog from "./components/RankingsDialog";
 import BingoGameWaiting from "./components/BingoGameWaiting/BingoGameWaiting";
 import CompletedPlayers from "./components/CompletedPlayers";
@@ -35,7 +34,8 @@ const BingoGame = ({
   soundEnabled,
   toggleSound,
   soundEnabledRef,
-  t
+  t,
+  isConnected
 }) => {
   const theme = useTheme();
   const palette = theme.palette;
@@ -86,7 +86,8 @@ const BingoGame = ({
     members,
     soundEnabledRef,
     playSoundCallback: playSound,
-    t
+    t,
+    isConnected,
   });
 
   const [showCountdown, setShowCountdown] = useState(false);
@@ -114,7 +115,7 @@ const BingoGame = ({
     setOpenStartDialog(false);
   };
 
-  if (!socket) {
+   if (!socket || !isConnected) {
     return (
       <Box
         display="flex"
@@ -215,17 +216,12 @@ const BingoGame = ({
                 t={t}
               />
             </Box>
-            <Box sx={{ flex: {md: "1"}, width: '100%', minWidth: { xs: '100%', md: '200px'} }}>
+            <Box sx={{ flex: 1, width: '100%',alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
               <NumberDisplay
                 currentNumber={gameState.currentNumber}
                 theme={theme}
                 manualMode={gameState.drawMode === "manual"}
                 bingoMode={gameState.bingoMode}
-              />
-              <ActiveNumbers
-                activeNumbers={gameState.activeNumbers}
-                bingoMode={gameState.bingoMode}
-                t={t}
               />
             </Box>
           </Box>

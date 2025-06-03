@@ -35,12 +35,21 @@ const useBingoGame = (members, currentUser) => {
       }, 3000);
     } else if (
       gameState.drawMode === "manual" &&
-      (gameState.bingoMode === "extended" || gameState.bingoMode === "classic")
+      (gameState.bingoMode === "classic")
     ) {
       setIsDrawButtonDisabled(true);
       setTimeout(() => {
         setIsDrawButtonDisabled(false);
       }, 5000);
+    }
+    else if (
+      gameState.drawMode === "manual" &&
+      (gameState.bingoMode === "extended")
+    ) {
+      setIsDrawButtonDisabled(true);
+      setTimeout(() => {
+        setIsDrawButtonDisabled(false);
+      }, 10000);
     }
     
     return true;

@@ -6,13 +6,12 @@ const NumberDisplay = ({ currentNumber, manualMode = false, bingoMode }) => {
   const theme = useTheme();
   const [activeDisplay, setActiveDisplay] = useState(false);
 
-  // Create a dynamic pulse animation based on theme colors
   const pulseAnimation = keyframes`
     0% {
       box-shadow: 0 0 0 0 ${theme.palette.primary.main}80;
     }
     70% {
-      box-shadow: 0 0 0 12px ${theme.palette.primary.main}00;
+      box-shadow: 0 0 0 10px ${theme.palette.primary.main}00; /* Pulse biraz küçültüldü */
     }
     100% {
       box-shadow: 0 0 0 0 ${theme.palette.primary.main}00;
@@ -25,7 +24,7 @@ const NumberDisplay = ({ currentNumber, manualMode = false, bingoMode }) => {
       let displayTime = 5000;
 
       if (bingoMode === 'extended') {
-        displayTime = 5000;
+        displayTime = 10000;
       } else if (bingoMode === 'superfast') {
         displayTime = 3000;
       }
@@ -41,22 +40,18 @@ const NumberDisplay = ({ currentNumber, manualMode = false, bingoMode }) => {
 
   const animationStyle = activeDisplay ? {
     animation: `${pulseAnimation} 2s infinite`,
-    transition: 'all 0.3s ease'
   } : {};
 
   return (
-    <Zoom 
+    <Zoom
       in={activeDisplay}
-      timeout={300} 
+      timeout={300}
     >
       <Paper
         elevation={6}
         sx={{
-          width: 120,
-          height: 120,
-          mx: 'auto',
-          mb: 4,
-          mt: 4,
+          height: '65%', 
+          aspectRatio: '1 / 1',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
@@ -64,39 +59,40 @@ const NumberDisplay = ({ currentNumber, manualMode = false, bingoMode }) => {
           bgcolor: theme.palette.primary.main,
           color: theme.palette.primary.contrastText,
           opacity: manualMode && !activeDisplay ? 0.5 : 1,
-          transition: 'opacity 0.3s ease',
+          transition: 'opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease',
           position: 'relative',
-          border: '3px solid',
+          border: '2px solid', 
           borderColor: theme.palette.primary.light,
-          padding: 2,
+          padding: 1.5, 
           ...animationStyle,
           '&::before': {
             content: '""',
             position: 'absolute',
-            top: -4,
-            left: -4,
-            right: -4,
-            bottom: -4,
+            top: -3, 
+            left: -3,
+            right: -3,
+            bottom: -3,
             borderRadius: '50%',
             background: theme.palette.background.gradient,
             zIndex: -1,
-            opacity: 0.4
+            opacity: 0.3
           }
         }}
       >
         <Box
           sx={{
             visibility: activeDisplay && currentNumber ? 'visible' : 'hidden',
-            transform: activeDisplay ? 'scale(1.1)' : 'scale(1)',
-            transition: 'transform 0.3s ease'
+            opacity: activeDisplay && currentNumber ? 1 : 0,
+            transform: activeDisplay ? 'scale(1.05)' : 'scale(1)', 
+            transition: 'transform 0.3s ease, opacity 0.3s ease',
           }}
         >
-          <Typography 
-            variant="h2"
+          <Typography
+            variant="h2" 
             sx={{
-              fontWeight: 'bold',
-              textShadow: `0 2px 4px ${theme.palette.mode === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.4)'}`,
-              userSelect: 'none'
+              textAlign: 'center',
+              textShadow: `0 1px 3px ${theme.palette.mode === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.4)'}`,
+              userSelect: 'none',
             }}
           >
             {currentNumber}
