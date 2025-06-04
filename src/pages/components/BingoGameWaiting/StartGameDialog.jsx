@@ -100,12 +100,22 @@ const StartGameDialog = ({
           </RadioGroup>
         </FormControl>
 
-        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }} dangerouslySetInnerHTML={{ __html: t("startGameDialog.description.classicText") }} />
-        <Typography variant="body2" color="textSecondary" dangerouslySetInnerHTML={{ __html: t("startGameDialog.description.extendedText") }} />
-        <Typography variant="body2" color="textSecondary" dangerouslySetInnerHTML={{ __html: t("startGameDialog.description.superfastText") }} />
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+          {t("startGameDialog.description.classicText")}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t("startGameDialog.description.extendedText")}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t("startGameDialog.description.superfastText")}
+        </Typography>
 
-        <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }} dangerouslySetInnerHTML={{ __html: t("startGameDialog.description.competitiveText") }} />
-        <Typography variant="body2" color="textSecondary" dangerouslySetInnerHTML={{ __html: t("startGameDialog.description.nonCompetitiveText") }} />
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+          {t("startGameDialog.description.competitiveText")}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t("startGameDialog.description.nonCompetitiveText")}
+        </Typography>
       </DialogContent>
 
       <DialogActions>
