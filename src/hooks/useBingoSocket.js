@@ -8,6 +8,7 @@ const useBingoSocket = ({
   t,
   isConnected,
 }) => {
+  const [isBingoPlayersLoading, setIsBingoPlayersLoading] = useState(true);
   const [gameState, setGameState] = useState({
     gameId: null,
     ticket: null,
@@ -55,6 +56,7 @@ const useBingoSocket = ({
       winner: null,
       message: "",
       rankings: [],
+      players: [],
     }));
     setMarkedNumbers([]);
     setCompletedPlayers([]);
@@ -65,6 +67,7 @@ const useBingoSocket = ({
     setCountdown(null);
     setInitialJoinNotificationShown(false);
     setCurrentPlayerColor(null);
+    setIsBingoPlayersLoading(true);
   }, []);
 
   const handleCloseRankingsDialog = useCallback(() => {
@@ -82,7 +85,7 @@ const useBingoSocket = ({
         })
       );
     },
-    [socket,isConnected, lobbyCode]
+    [socket, isConnected, lobbyCode]
   );
 
   const drawNumber = useCallback(() => {
@@ -93,7 +96,7 @@ const useBingoSocket = ({
         lobbyCode,
       })
     );
-  }, [socket,isConnected, lobbyCode]);
+  }, [socket, isConnected, lobbyCode]);
 
   const callBingo = useCallback(() => {
     if (!socket || !isConnected) return;
@@ -103,7 +106,7 @@ const useBingoSocket = ({
         lobbyCode,
       })
     );
-  }, [socket,isConnected, lobbyCode]);
+  }, [socket, isConnected, lobbyCode]);
 
   const handleMarkNumber = useCallback(
     (number) => {
@@ -117,23 +120,28 @@ const useBingoSocket = ({
         })
       );
     },
-    [socket, lobbyCode, playSoundCallback,isConnected]
+    [socket, lobbyCode, playSoundCallback, isConnected]
   );
 
   useEffect(() => {
-    if (!socket || !isConnected) { // <-- KONTROLÜ GÜNCELLEYİN
-      // Bağlantı yoksa veya socket yoksa bir şey yapma.
-      // İsteğe bağlı: Bağlantı koptuğunda bazı state'leri sıfırlayabilirsiniz.
+    if (!socket || !isConnected) {
+      if (isConnected === false && !gameState.gameStarted) {
+         setIsBingoPlayersLoading(true);
+      }
       return;
     }
 
-    socket.send(
-      JSON.stringify({
-        type: "BINGO_JOIN",
-        lobbyCode,
-        playerId: currentUser?.id,
-      })
-    );
+    if (!gameState.gameStarted) {
+        setIsBingoPlayersLoading(true);
+        socket.send(
+          JSON.stringify({
+            type: "BINGO_JOIN",
+            lobbyCode,
+            playerId: currentUser?.id,
+          })
+        );
+    }
+
 
     const handleMessage = (event) => {
       const data = JSON.parse(event.data);
@@ -157,7 +165,7 @@ const useBingoSocket = ({
             players: data.players || [],
             message: data.message,
             gameStarted: data.gameStarted,
-            drawnNumbers: data.drawnNumbers || [], // Will receive full list on join/rejoin
+            drawnNumbers: data.drawnNumbers || [],
             activeNumbers: data.activeNumbers || [],
             currentNumber: data.currentNumber || null,
             drawMode: data.drawMode || "auto",
@@ -167,12 +175,10 @@ const useBingoSocket = ({
             bingoMode: data.bingoMode || "classic",
           }));
           setCurrentPlayerColor(data.playerColor || null);
-
           if (data.markedNumbers) {
             setMarkedNumbers(data.markedNumbers);
           }
           setCompletedPlayers(data.completedPlayers || []);
-
           if (data.completedBingo !== undefined) {
             setHasCompletedBingo(data.completedBingo);
           } else if (currentUser?.id && Array.isArray(data.completedPlayers)) {
@@ -183,7 +189,6 @@ const useBingoSocket = ({
           } else {
             setHasCompletedBingo(false);
           }
-
           if (!initialJoinNotificationShown && !data.isRejoin) {
             setNotification({
               open: true,
@@ -192,7 +197,69 @@ const useBingoSocket = ({
             });
             setInitialJoinNotificationShown(true);
           }
+          setIsBingoPlayersLoading(false);
           break;
+
+        case "BINGO_GAME_STATE_UPDATED":
+          setGameState(prev => ({
+            ...prev,
+            players: data.players || [],
+            host: data.host || prev.host,
+            gameStarted: data.gameStarted !== undefined ? data.gameStarted : prev.gameStarted,
+            gameEnded: data.gameEnded !== undefined ? data.gameEnded : prev.gameEnded,
+            drawMode: data.drawMode || prev.drawMode,
+            drawer: data.drawer !== undefined ? data.drawer : prev.drawer, 
+            bingoMode: data.bingoMode || prev.bingoMode,
+            competitionMode: data.competitionMode || prev.competitionMode,
+            gameId: data.gameId || prev.gameId,
+          }));
+          if (data.kickedPlayerId && String(data.kickedPlayerId) !== String(currentUser?.id)) {
+            setNotification({
+              open: true,
+              message: t("notifications.playerKickedOrLeftPreGame", {
+                playerName: data.messagePlayerName || t("notifications.a_player", "A player"),
+                gameName: "Bingo"
+              }),
+              severity: "info",
+            });
+          }
+          if (!gameState.gameStarted && (data.players || data.kickedPlayerId)) {
+            setIsBingoPlayersLoading(false);
+          }
+          break;
+
+        case "BINGO_PLAYER_LEFT_MID_GAME":
+          setGameState(prev => ({
+            ...prev,
+            players: data.players || [],
+            host: data.host !== undefined ? data.host : prev.host,
+            drawer: data.drawer !== undefined ? data.drawer : prev.drawer,
+            drawMode: data.drawMode !== undefined ? data.drawMode : prev.drawMode,
+          }));
+          if (data.notification && String(data.playerId) !== String(currentUser?.id)) {
+            setNotification({
+              open: true,
+              message: getNotificationMessage(data.notification) || `${data.playerName || t("notifications.a_player", "A player")} ${t("notifications.leftTheGameSuffix", "left the game.")}`,
+              severity: "warning",
+            });
+          }
+          break;
+
+        case "BINGO_DRAW_MODE_CHANGED":
+            setGameState(prev => ({
+                ...prev,
+                drawMode: data.newDrawMode,
+                drawer: data.drawer !== undefined ? data.drawer : null,
+                players: data.players || prev.players,
+            }));
+            if (String(data.playerId) !== String(currentUser?.id) || !data.playerId) { 
+                setNotification({
+                    open: true,
+                    message: data.message || t("notifications.drawModeChanged", "Draw mode has been changed to {newDrawMode}.", { newDrawMode: data.newDrawMode }),
+                    severity: "info",
+                });
+            }
+            break;
 
         case "BINGO_NUMBER_MARKED_CONFIRMED":
           if (String(data.playerId) === String(currentUser?.id)) {
@@ -202,7 +269,6 @@ const useBingoSocket = ({
             }
           }
           break;
-
         case "BINGO_PLAYER_COMPLETED":
             setCompletedPlayers(prev => {
                 const playerExists = prev.some(p => String(p.id) === String(data.playerId));
@@ -222,7 +288,6 @@ const useBingoSocket = ({
                 setHasCompletedBingo(true);
             }
             break;
-
         case "BINGO_PLAYER_JOINED":
           setGameState((prev) => ({
             ...prev,
@@ -237,13 +302,15 @@ const useBingoSocket = ({
               severity: "info",
             });
           }
+          if (!gameState.gameStarted) {
+            setIsBingoPlayersLoading(false);
+          }
           break;
-
         case "BINGO_COUNTDOWN":
           setCountdown(data.countdown);
           playSoundCallback("countdown");
+          setIsBingoPlayersLoading(false);
           break;
-
         case "BINGO_STARTED":
            setMarkedNumbers([]);
            setCompletedPlayers([]);
@@ -251,8 +318,7 @@ const useBingoSocket = ({
            setShowRankingsDialog(false);
            setShowPersonalRankingsDialog(false);
            setWinnerDetails(null);
-
-          setCountdown(null);
+           setCountdown(null);
           setGameState((prev) => ({
             ...prev,
             gameStarted: true,
@@ -264,12 +330,11 @@ const useBingoSocket = ({
             gameId: data.gameId,
             competitionMode: data.competitionMode || "competitive",
             players: data.players || prev.players,
-            drawnNumbers: [], // Reset drawn numbers at game start
+            drawnNumbers: [],
             activeNumbers: [],
             currentNumber: null,
             rankings: [],
           }));
-
           if (data.players && currentUser?.id) {
             const myPlayerData = data.players.find(p => String(p.id) === String(currentUser.id));
             if (myPlayerData) {
@@ -279,40 +344,35 @@ const useBingoSocket = ({
               console.warn("Current user's data not found in BINGO_STARTED players list. Ticket/color might be stale.");
             }
           }
-
           setNotification({
             open: true,
             message: t("notifications.gameStarted") || "Game has started!",
             severity: "success",
           });
           playSoundCallback("gameStart");
+          setIsBingoPlayersLoading(false);
           break;
-
         case "BINGO_NUMBER_DRAWN":
           setGameState((prev) => ({
             ...prev,
             currentNumber: data.number,
-            // Append the new number to the existing drawnNumbers array
             drawnNumbers: [...prev.drawnNumbers, data.number],
             activeNumbers: data.activeNumbers,
           }));
           playSoundCallback("drawNumber");
           break;
-
         case "BINGO_NUMBER_DISPLAY_END":
              setGameState((prev) => ({
                 ...prev,
                 activeNumbers: data.activeNumbers !== undefined ? data.activeNumbers : prev.activeNumbers,
              }));
             break;
-
         case "BINGO_NUMBER_CLEAR":
           setGameState((prev) => ({
             ...prev,
             activeNumbers: data.activeNumbers,
           }));
           break;
-
         case "BINGO_INVALID":
           playSoundCallback("wrongBingo");
           setNotification({
@@ -321,7 +381,6 @@ const useBingoSocket = ({
             severity: "error",
           });
           break;
-
         case "BINGO_GAME_STATUS":
           setGameState(prev => ({
             ...prev,
@@ -344,8 +403,10 @@ const useBingoSocket = ({
              setGameState(prev => ({...prev, rankings: data.finalRankings || data.rankings || prev.rankings}));
              setShowRankingsDialog(true);
           }
+          if (data.players && !gameState.gameStarted) {
+             setIsBingoPlayersLoading(false);
+          }
           break;
-
     case "BINGO_GAME_OVER":
           setGameState((prev) => ({
             ...prev,
@@ -353,7 +414,6 @@ const useBingoSocket = ({
             gameStarted: false,
             rankings: data.finalRankings || [],
           }));
-
           const allPlayersFromRankings = data.finalRankings ? data.finalRankings.map(p => ({
               id: p.playerId,
               name: p.name || p.userName,
@@ -362,7 +422,6 @@ const useBingoSocket = ({
               completedAt: p.completedAt
             })) : [];
           setCompletedPlayers(allPlayersFromRankings.filter(p => !!p.completedAt));
-
           if (data.finalRankings && data.finalRankings.length > 0) {
             const winnerData = data.finalRankings[0];
             setWinnerDetails({
@@ -373,12 +432,11 @@ const useBingoSocket = ({
           } else {
             setWinnerDetails(null);
           }
-
           setShowRankingsDialog(true);
           setShowPersonalRankingsDialog(false);
           playSoundCallback("gameOver");
+          setIsBingoPlayersLoading(false);
           break;
-
         case "BINGO_ERROR":
           setNotification({
             open: true,
@@ -386,57 +444,27 @@ const useBingoSocket = ({
             severity: "error",
           });
           break;
-
-        case "BINGO_PLAYER_LEFT":
-          setGameState(prev => ({
-            ...prev,
-            players: prev.players.filter(p => String(p.id) !== String(data.playerId))
-          }));
-          if (data.notification) {
-            setNotification({
-              open: true,
-              message: getNotificationMessage(data.notification) || `${data.playerName || 'A player'} left the game.`,
-              severity: "warning",
-            });
-          }
-          break;
-            // --- KICK ILE ILGILI CASE'LER ---
-        case "USER_KICKED": // Sadece atılan kullanıcıya gönderilen mesaj
-            console.log("[BINGO_SOCKET_DEBUG] Received USER_KICKED data:", data);
+        case "USER_KICKED":
           if (data.lobbyCode === lobbyCode) {
-            console.log(`User ${currentUser?.id} received USER_KICKED for lobby ${lobbyCode}. Resetting game state.`);
             setNotification({
               open: true,
-              // Çeviri anahtarı: notifications.youWereKickedFromLobbyAndGame
               message: data.reason || t("notifications.youWereKickedFromLobbyAndGame", { lobbyName: data.lobbyCode, gameName: "Bingo" }) || `You have been kicked from the lobby and the game.`,
               severity: "error",
             });
-            playSoundCallback("error"); // Veya özel bir "kicked" sesi
+            playSoundCallback("error");
             onGameReset();
-            // Bu hook'u kullanan component (örn: BingoGame sayfası)
-            // bu durumu (örn. notification mesajı veya gameState.gameId === null olması)
-            // algılayıp kullanıcıyı lobiye veya ana sayfaya yönlendirmelidir.
           } else {
             console.warn(`USER_KICKED message for lobby ${data.lobbyCode} ignored by current lobby ${lobbyCode}`);
           }
           break;
-
    case "PLAYER_KICKED_BY_HOST":
-  // Backend'den gelen mesaj yapısı: { type: "PLAYER_KICKED_BY_HOST", lobbyCode: "LPLBNV", data: { kickedUserId: "...", kickedUserName: "..." } }
-  const mainLobbyCodePK = data.lobbyCode;       // Ana mesajdaki lobbyCode
-  const eventSpecificDataPK = data.data;        // PLAYER_KICKED_BY_HOST'a özel veriler bu 'data' objesi içinde
+  const mainLobbyCodePK = data.lobbyCode;
+  const eventSpecificDataPK = data.data;
 
-  console.log("[BINGO_SOCKET_DEBUG] Received PLAYER_KICKED_BY_HOST raw message:", JSON.stringify(data));
-
-  // eventSpecificDataPK'nın varlığını ve bir obje olduğunu kontrol et
   if (eventSpecificDataPK && typeof eventSpecificDataPK === 'object') {
-    const { kickedUserId, kickedUserName } = eventSpecificDataPK; // kickedUserId ve kickedUserName'i buradan al
+    const { kickedUserId, kickedUserName } = eventSpecificDataPK;
 
-    console.log(`[BINGO_SOCKET_DEBUG] Parsed PLAYER_KICKED_BY_HOST: lobbyCode=${mainLobbyCodePK}, kickedUserId=${kickedUserId}, kickedUserName=${kickedUserName}`);
-
-    // Mesajın bu lobiyle ilgili olduğunu ve atılan kişinin mevcut kullanıcı olmadığını doğrula
     if (mainLobbyCodePK === lobbyCode && kickedUserId && String(kickedUserId) !== String(currentUser?.id)) {
-      console.log(`[BINGO_SOCKET_INFO] User ${currentUser?.id} in lobby ${lobbyCode} received PLAYER_KICKED_BY_HOST for player ${kickedUserId}. Updating player list.`);
       setGameState(prev => {
         const updatedPlayers = prev.players.filter(p => String(p.id) !== String(kickedUserId));
         let updatedDrawer = prev.drawer;
@@ -453,21 +481,15 @@ const useBingoSocket = ({
       });
       setNotification({
         open: true,
-        message: t("notifications.playerKickedFromGameMidGame", { playerName: kickedUserName || 'A player', gameName: "Bingo" }) || `${kickedUserName || 'A player'} was kicked from the Bingo game.`,
+        message: t("notifications.playerKickedFromGameMidGame", { playerName: kickedUserName || t("notifications.a_player", "A player"), gameName: "Bingo" }),
         severity: "info",
       });
     } else if (mainLobbyCodePK === lobbyCode && !kickedUserId) {
-      // Bu lobi için mesaj geldi ama kickedUserId tanımsız (eventSpecificDataPK içinde)
       console.error(`[BINGO_SOCKET_ERROR] PLAYER_KICKED_BY_HOST for current lobby ${lobbyCode} received with undefined kickedUserId inside nested 'data' object. Full message:`, JSON.stringify(data));
-    } else if (mainLobbyCodePK !== lobbyCode) {
-      // Mesaj farklı bir lobi için, normalde en başta filtrelenmeli ama burada da kontrol edilebilir.
-      // console.log(`[BINGO_SOCKET_DEBUG] Ignoring PLAYER_KICKED_BY_HOST for lobby ${mainLobbyCodePK} (current: ${lobbyCode})`);
     } else if (String(kickedUserId) === String(currentUser?.id)) {
-      // Bu durumun olmaması beklenir, çünkü atılan kullanıcı USER_KICKED almalı.
       console.warn(`[BINGO_SOCKET_WARN] PLAYER_KICKED_BY_HOST received for current user ${currentUser?.id} in lobby ${lobbyCode}. This should be handled by USER_KICKED. Full message:`, JSON.stringify(data));
     }
   } else {
-    // eventSpecificDataPK (data.data) yoksa veya obje değilse
     console.error(`[BINGO_SOCKET_ERROR] PLAYER_KICKED_BY_HOST message for lobby ${mainLobbyCodePK} is missing or has an invalid nested 'data' object. Full message:`, JSON.stringify(data));
   }
   break;
@@ -487,7 +509,9 @@ const useBingoSocket = ({
     playSoundCallback,
     t,
     initialJoinNotificationShown,
-    isConnected
+    isConnected,
+    onGameReset,
+    gameState.gameStarted
   ]);
 
   const closeWinnerDialog = useCallback(() => {
@@ -509,6 +533,7 @@ const useBingoSocket = ({
     showRankingsDialog,
     showPersonalRankingsDialog,
     currentPlayerColor,
+    isBingoPlayersLoading,
     startGameWithOptions,
     drawNumber,
     callBingo,

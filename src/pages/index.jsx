@@ -71,6 +71,7 @@ const BingoGame = ({
     showRankingsDialog,
     showPersonalRankingsDialog,
     currentPlayerColor,
+    isBingoPlayersLoading,
     startGameWithOptions,
     drawNumber: socketDrawNumber,
     callBingo,
@@ -83,7 +84,6 @@ const BingoGame = ({
     socket,
     lobbyCode,
     currentUser,
-    members,
     soundEnabledRef,
     playSoundCallback: playSound,
     t,
@@ -131,6 +131,20 @@ const BingoGame = ({
     );
   }
 
+  if (isBingoPlayersLoading && !gameState.gameStarted && !showRankingsDialog && !showPersonalRankingsDialog) {
+    return (
+      <Container sx={{ width: "100%", height: "100%", py: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress size={60} sx={{ mb: 3 }} />
+        <Typography variant="h5" color="text.secondary" textAlign="center">
+          {t("screens.bingo.loadingPlayers", "Bingo players are loading...")}
+        </Typography>
+        <Typography variant="body1" color="text.disabled" sx={{ mt: 1 }} textAlign="center">
+          {t("screens.bingo.pleaseWait", "Please wait a moment.")}
+        </Typography>
+      </Container>
+    );
+  }
+
   if (showCountdown && countdown > 0) {
     return <CountdownScreen countdown={countdown} t={t}/>;
   }
@@ -138,7 +152,7 @@ const BingoGame = ({
   const gamePlayers = gameState?.players || [];
   return (
     <Container  sx={{ width: "100%", height: "100%",py: 2,overflow: 'auto' }}>
-      {(!gameState.gameStarted && !showRankingsDialog && !showPersonalRankingsDialog) ? (
+      {(!gameState.gameStarted && !showRankingsDialog && !showPersonalRankingsDialog && !isBingoPlayersLoading) ? (
         <BingoGameWaiting
           gameState={gameState}
           lobbyInfo={lobbyInfo}
