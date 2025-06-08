@@ -11,9 +11,11 @@
     ·
     <a href="#key-features"><strong>Key Features</strong></a>
     ·
+    <a href="#gameplay-modes--styles"><strong>Gameplay Modes & Styles</strong></a>
+    ·
     <a href="#how-to-play"><strong>How to Play</strong></a>
     ·
-    <a href="#game-rules-and-validations"><strong>Game Rules & Validations</strong></a>
+    <a href="#uninterrupted-gameplay-with-redis-integration"><strong>Resilience with Redis</strong></a>
     ·
     <a href="#bingo-game-screen-experience"><strong>Game Screen Experience</strong></a>
     ·
@@ -34,7 +36,7 @@ Our goal with Bingo is to offer a fun, engaging, and social game of chance where
 <h2 id="about-bingo">✨ About Bingo</h2>
 
 > Bingo is a game of chance. Mark numbers on your card as they are called. Be the first to complete a pattern and shout 'BINGO!' to win. Enjoy various modes and fun with friends.
-> **Estimated Play Time:** 20 minutes
+> **Estimated Play Time:** 5-20 minutes (depending on mode)
 
 Game Center Game Platform's Bingo brings this classic to life in a dynamic digital environment. Experience real-time gameplay, rich social features, and a user-friendly interface, making it a unique entertainment and community experience.
 
@@ -47,42 +49,82 @@ As a module of GameHub, Bingo benefits from the platform's robust features:
 *   **🕹️ Part of a Multi-Game Platform:** Bingo is one of the exciting games offered, with more to come.
 *   **👥 Social Interaction Focused:** Create or join Bingo lobbies, chat with friends, and enjoy the game together.
 *   **⚡ Real-Time Live Gaming Experience:** Instant updates, synchronized gameplay, and real-time competition powered by WebSocket.
-*   **🎨 User-Friendly and Stylish Interface:** Modern and intuitive design using React and Material UI.
+*   **🎨 Dynamic & Themed Tickets:** Each player receives a uniquely colored and laid-out Bingo ticket at the start of every game. These vibrant designs adapt to GameHub's active theme (Light, Dark, Neon-Ocean), ensuring a fresh and visually appealing experience every time you play.
 *   **📱 Fully Responsive Design:** Seamless Bingo experience on desktop, tablet, and mobile devices.
 *   **🌈 Customizable Theme Options:** Play Bingo in Light, Dark, or the vibrant Neon-Ocean theme.
 *   **🌐 Multi-Language Support:** Bingo interface available in English and Turkish.
 *   **🔔 Smart Notification System:** Instant notifications for game events, lobby activities, and invitations.
 *   **📊 Detailed Player Profile:** Track your Bingo statistics, game history, and achievements.
 *   **💬 Community and Chat Areas:** In-lobby chat enhances the social aspect of Bingo.
+*   **🔄 Concurrent Gameplay:** Players can participate in Bingo games across multiple lobbies simultaneously on the GameHub platform.
+
+---
+
+<h2 id="gameplay-modes--styles">⚙️ Gameplay Modes & Styles</h2>
+
+Bingo in GameHub offers flexible gameplay options to suit every player's preference, controlled by the lobby host:
+
+### Drawing Mechanics
+
+*   **Automatic Draw:** Numbers are drawn automatically by the system at a set interval.
+*   **Manual Draw:** The host can designate a player (or themselves) to manually draw numbers, giving a more traditional feel to the game.
+    *   *Resilience Note:* If a player designated for manual drawing is kicked or leaves, the game automatically switches to "Automatic Draw" mode to ensure continuity.
+
+### Game Speed Modes (for Automatic Draw)
+
+1.  **Classic Bingo**
+    *   **Speed:** 5 seconds per number
+    *   **Features:**
+        *   Dive into timeless fun with standard rules!
+        *   Perfect pace for endless excitement.
+        *   Stay sharp—complacency is not allowed!
+2.  **Extended Time Bingo**
+    *   **Speed:** 10 seconds per number
+    *   **Features:**
+        *   Savor every number with 10s to spare.
+        *   Relaxed vibes for a laid-back game.
+        *   Extra time to mark and chill.
+3.  **Super Fast Bingo**
+    *   **Speed:** 3 seconds per number
+    *   **Features:**
+        *   Lightning-speed calls—think quick!
+        *   Only 3s to spot your number—ready, set, go!
+
+### Competition Styles
+
+1.  **Competitive Mode**
+    *   **Features:**
+        *   Ranked play: Players earn points based on their ranking (1st to call Bingo, 2nd, etc.).
+        *   Full game duration: The game continues until a set number of winners or conditions are met.
+        *   Score tracking for player statistics.
+2.  **Casual Mode (Non-Competitive)**
+    *   **Features:**
+        *   First win ends game: The first player to correctly call Bingo wins the round, and the game concludes.
+        *   Friendly play focused on quick fun.
+        *   Ideal for quick matches.
 
 ---
 
 <h2 id="how-to-play">📖 How to Play Bingo</h2>
 
 1.  **Join a Lobby:** Find an active Bingo lobby on the GameHub main screen or game detail page, or create your own.
-2.  **Get Your Cards:** Once in the lobby and the game starts, you'll receive your unique Bingo card(s).
-3.  **Listen for Numbers:** The game will call out numbers one by one (either automatically or manually by the host, depending on game mode).
+2.  **Get Your Cards:** Once in the lobby and the host starts the game, you'll receive your unique, dynamically styled Bingo card(s).
+3.  **Listen for Numbers:** The game will call out numbers one by one (either automatically or manually by the host/designated player, depending on the selected game mode).
 4.  **Mark Your Card:** If a called number matches one on your card, mark it.
-5.  **Shout BINGO!:** Be the first to complete a required pattern (e.g., a line, full house) and click the "Call Bingo!" button to win.
+5.  **Shout BINGO!:** Be the first to complete a required pattern (e.g., a line, full house – specific patterns depend on host settings if applicable) and click the "Call Bingo!" button.
+    *   *(Note: Players can participate in Bingo games across multiple lobbies simultaneously, though managing several active games might require keen attention!)*
 
 ---
 
-<h2 id="game-rules-and-validations">📜 Game Rules & Validations</h2>
+<h2 id="uninterrupted-gameplay-with-redis-integration">🛡️ Uninterrupted Gameplay with Redis Integration</h2>
 
-To ensure fair and smooth gameplay, the following rules and validations are in place for Bingo:
+The Bingo module benefits significantly from GameHub's robust backend **Redis integration**, ensuring an exceptionally stable and resilient gaming experience.
 
-*   **Host Start Conditions:**
-    *   The host (or any member in the lobby) must not be actively participating in another game elsewhere on the platform before starting a new Bingo game.
-*   **No New Entries During Active Game:**
-    *   Once a Bingo game has started in a lobby, new users cannot join that specific game session. They will receive a message indicating the game is in progress. They can, however, join the lobby to wait for the next game or chat.
-*   **Player Leaving Mid-Game:**
-    *   If a player leaves the lobby while a Bingo game is in progress, they are automatically removed from the current game. Their cards will no longer be active for that round.
-*   **Host Kicking Player Mid-Game:**
-    *   The host has the ability to remove any player from the lobby at any time.
-    *   If a player is kicked during an active Bingo game, they are immediately removed from that game session and the lobby.
-    *   **Manual Drawing Mode:** If the kicked player was the one responsible for manually drawing numbers in a Bingo game, the game will automatically switch to an "automatic number drawing" mode to ensure continuity.
-*   **Incorrect Bingo Call:**
-    *   If a player calls "Bingo!" incorrectly, they will receive a notification (audible and visual), and the game continues.
+*   **Game State Persistence:** Critical in-game data, such as drawn numbers, player card states, current game progress, and active timers (like auto-draw intervals), is actively managed and persisted in Redis. You can explore the backend implementation details [here](https://github.com/yusufinann/GameHub/tree/master/backend).
+*   **Resilience to Disruptions:** In the event of temporary backend restarts or network interruptions, the active Bingo game state is preserved in Redis. Once the backend services are restored, players can seamlessly resume their game exactly where they left off. This prevents data loss and frustrating game freezes, ensuring continuity.
+*   **Automatic Timer Recovery:** Game-critical timers, including the 3s/5s/10s auto-draw intervals, are meticulously managed and persisted. Should the backend restart, these timer states are recovered, allowing games to resume their pace without missing a beat.
+
+This Redis-powered architecture ensures that your Bingo sessions are shielded from common backend issues, providing maximum durability and high performance for in-game interactions.
 
 ---
 
@@ -92,40 +134,39 @@ This section details the features and interactions on the Bingo game screen, as 
 
 **Bingo in Normal Lobby:**
 
-*   **👑 Host Control:** Lobby creator's authority over game settings and starting.
+*   **👑 Host Control:** Lobby creator's authority over game settings (drawing mechanics, speed, competition style) and starting the game.
 *   **🚪 Easy User Participation:** Quick participation via lobby link, main screen, or game detail page.
-*   **🏁 Game Start:** Start by host and 5-second countdown timer.
-*   **⚙️ Game Mode and Style Selection (Host):** Flexibility to adjust mode and style before game starts.
-*   **⚡ Real-Time Gaming Experience:** Real-time and synchronized game flow.
+*   **🏁 Game Start:** Initiated by the host, often with a 5-second countdown timer.
+*   **⚡ Real-Time Gaming Experience:** Real-time and synchronized game flow for all players.
 *   **🔊 In-Game Sound Control:** Option to turn sound effects on/off.
 *   **💬 In-Game Messaging (Chat):** Communication with animated chat area and emoji support.
 *   **😄 Quick Emoji Sending:** Ability to quickly express emotions.
-*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446833.png" alt="Area" width="20" style="vertical-align: middle;"> Game Area:** Basic interface of the Bingo game.
-*   **📣 "Call Bingo!" Button:** Button activated when Bingo is achieved.
-*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446847.png" alt="Draw" width="20" style="vertical-align: middle;"> "Draw Number" Button (Manual Mode):** Manual number drawing control.
-*   **🔢 Drawn Numbers List:** Ability to track all drawn numbers.
-*   **🔥 Active Numbers Area:** Highlighting the latest drawn numbers.
-*   **🎫 Bingo Ticket (Your Ticket):** Player's personal bingo card.
-*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446823.png" alt="Card" width="20" style="vertical-align: middle;"> Card Selection:** Switching between multiple tickets.
-*   **🏆 Completing Players List:** Real-time list of players who have achieved Bingo.
-*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446854png" alt="Ranking" width="20" style="vertical-align: middle;"> Game Over and Ranking Table:** Game results, ranking, and "Play Again" options.
-*   **💾 Game History Recording (Database):** Permanently storing game results.
+*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446833.png" alt="Area" width="20" style="vertical-align: middle;"> Game Area:** The main interface displaying Bingo cards, drawn numbers, etc.
+*   **📣 "Call Bingo!" Button:** Button activated when a player believes they have achieved Bingo.
+*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446847.png" alt="Draw" width="20" style="vertical-align: middle;"> "Draw Number" Button (Manual Mode):** Control for the designated player to draw numbers.
+*   **🔢 Drawn Numbers List:** Ability to track all numbers called during the game.
+*   **🔥 Active Numbers Area:** Highlighting the latest drawn numbers for easy visibility.
+*   **🎫 Bingo Ticket (Your Ticket):** Player's personal, uniquely styled bingo card(s).
+*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446823.png" alt="Card" width="20" style="vertical-align: middle;"> Card Selection:** If multiple cards are in play, ability to switch between them.
+*   **🏆 Completing Players List:** Real-time list of players who have successfully called Bingo.
+*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446854png" alt="Ranking" width="20" style="vertical-align: middle;"> Game Over and Ranking Table:** Display of game results, player rankings (in competitive mode), and options to "Play Again."
+*   **💾 Game History Recording (Database & Redis Cache):** Game results are persisted in MongoDB for long-term player statistics, with recent final scores potentially cached in Redis for quick access (as per GameHub's caching strategy).
 *   **⏳ If Host Leaves Lobby:** Lobby automatically closes if they do not return within 8 hours.
+*   **🛠️ Host Kicking Player:** If a host removes a player who was manually drawing numbers, the game intelligently switches to an automatic number drawing mode.
 
 **Bingo in Event Lobby:**
 
 *   **⏱️ Event Timer:** Dynamically showing the time remaining until the event starts.
 *   **👑 Host Control (Event Lobby):** Event owner host's authority to start the game.
 *   **🔔 Event Start Notification:** Instant notification to lobby members when the event starts.
-*   **🚀 Starting Game in Event Lobby:** Start with game mode selection modal.
+*   **🚀 Starting Game in Event Lobby:** Start with game mode selection modal presented by the host.
 *   **<img src="https://cdn-icons-png.flaticon.com/512/446/446831.png" alt="Countdown" width="20" style="vertical-align: middle;"> Countdown and Game Start (Event Lobby):** Exciting start with a 3-second countdown.
-*   **🎲 Bingo in Event Lobby:** Same rich gaming experience as normal lobby.
-*   **💬 In-Game Snackbar Notifications:** Instant notifications during gameplay.
-*   **⏰ Event End Warning 5 Minutes Before:** Warning notification to players 5 minutes before the event time expires.
+*   **🎲 Bingo in Event Lobby:** Same rich gaming experience as normal lobby, respecting event time constraints.
+*   **💬 In-Game Snackbar Notifications:** Instant notifications during gameplay for various events.
 *   **<img src="https://cdn-icons-png.flaticon.com/512/446/446835.png" alt="Joining" width="20" style="vertical-align: middle;"> Notifications to Users When Joining Game:** Instant notification when a new player joins.
-*   **❌ Incorrect Bingo Call Notification (Audible and Silent):** Instant feedback and buzzer sound in case of error.
+*   **❌ Incorrect Bingo Call Notification (Audible and Silent):** Instant feedback and buzzer sound in case of an erroneous "Bingo!" call.
 *   **🚪 User Joining Lobby Notification (Audible and Silent):** Instant notification when a new player joins the lobby.
-*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446851.png" alt="Deletion" width="20" style="vertical-align: middle;"> Notification When Lobby is Deleted (Animated Modal):** Animated notification when lobby is deleted or event ends.
+*   **<img src="https://cdn-icons-png.flaticon.com/512/446/446851.png" alt="Deletion" width="20" style="vertical-align: middle;"> Notification When Lobby is Deleted (Animated Modal):** Animated notification when lobby is deleted by host or the event time expires.
     *   **🗑️ Lobby Deleted by Host:** "Lobby No Longer Available" modal and countdown.
     *   **⌛ Event Lobby Time Expired:** "Lobby No Longer Available" modal and countdown.
 
@@ -148,10 +189,11 @@ This section outlines how to add the Bingo game module to an existing Lerna mono
     ```
 
 2.  **Clone the Bingo game repository:**
+    (Assuming your Bingo module repository is `https://github.com/yusufinann/bingo-game.git` - replace if different)
     ```bash
-    git clone https://github.com/yusufinann/bingo-game.git
+    git clone https://github.com/yusufinann/bingo-game.git bingo-game-module 
     ```
-    This will create a `bingo-game` folder within your `packages` directory.
+    This will create a `bingo-game-module` folder (or your chosen name) within your `packages` directory.
 
 3.  **Bootstrap Lerna (from your monorepo root):**
     After cloning, navigate back to the root of your Lerna project and run:
@@ -166,7 +208,7 @@ This section outlines how to add the Bingo game module to an existing Lerna mono
 **Important Considerations:**
 
 *   **Dependencies & Integration:** This Bingo module is **designed and optimized to work within the [GameHub Platform](https://github.com/yusufinann/GameHub)**. While you can clone it as a standalone package, it relies on certain frontend components, backend APIs, context providers, and WebSocket communication established by the GameHub's `game-center` (frontend) and `backend` packages.
-*   **Functionality:** Without the surrounding GameHub infrastructure, full functionality (like user authentication, lobby management outside the game, profile integration, etc.) may not be available or may require significant adaptation.
+*   **Functionality:** Without the surrounding GameHub infrastructure, full functionality (like user authentication, lobby management outside the game, profile integration, Redis-backed resilience for game state, etc.) may not be available or may require significant adaptation.
 *   **Primary Use:** The primary and recommended way to use this Bingo game is by cloning and running the entire [GameHub Platform](https://github.com/yusufinann/GameHub) as instructed in its main README.
 
 ---
@@ -176,8 +218,9 @@ This section outlines how to add the Bingo game module to an existing Lerna mono
 The Bingo game module leverages the core technology stack of the [GameHub platform](https://github.com/yusufinann/GameHub):
 
 *   **Frontend:** React, Material UI, React Context, Axios, react-router-dom
-*   **Backend:** Node.js, Express, MongoDB, Mongoose, Jsonwebtoken
-*   **Real-time Communication:** WebSocket
+*   **Backend Communication:** Via GameHub's Node.js, Express, MongoDB, Mongoose, Jsonwebtoken backend.
+*   **Real-time Communication:** WebSocket (managed by GameHub)
+*   **State Resilience:** Redis (via GameHub's backend integration)
 *   **Monorepo Management:** Lerna
 
 ---
@@ -185,7 +228,7 @@ The Bingo game module leverages the core technology stack of the [GameHub platfo
 ## 🔗 Integration within GameHub (Primary Setup)
 
 *   This Bingo game is a submodule intended for use within the `GameHub` Lerna monorepo.
-*   Its source code is typically located in the `packages/bingo-game` (or a similarly named, if you rename it after cloning) directory within the main [GameHub repository](https://github.com/yusufinann/GameHub).
+*   Its source code is typically located in a directory like `packages/bingo-game-module` within the main [GameHub repository](https://github.com/yusufinann/GameHub).
 *   All primary installation, setup, and execution are handled from the root of the `GameHub` project. Please refer to the [main GameHub README](https://github.com/yusufinann/GameHub#installation-and-setup) for comprehensive setup instructions.
 
 ---
