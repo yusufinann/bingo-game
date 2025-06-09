@@ -115,22 +115,22 @@ const BingoGame = ({
     setOpenStartDialog(false);
   };
 
-   if (!socket || !isConnected) {
+   if (!socket || !isConnected && isBingoPlayersLoading) { 
     return (
       <Box
         display="flex"
         justifyContent="center"
         alignItems="center"
         minHeight="400px"
+        flexDirection="column"
       >
         <CircularProgress />
-        <Typography variant="h6" ml={2}>
+        <Typography variant="h6" ml={2} mt={2}>
           {t("Waiting for connection...")}
         </Typography>
       </Box>
     );
   }
-
   if (isBingoPlayersLoading && !gameState.gameStarted && !showRankingsDialog && !showPersonalRankingsDialog) {
     return (
       <Container sx={{ width: "100%", height: "100%", py: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -152,7 +152,7 @@ const BingoGame = ({
   const gamePlayers = gameState?.players || [];
   return (
     <Container  sx={{ width: "100%", height: "100%",py: 2,overflow: 'auto' }}>
-      {(!gameState.gameStarted && !showRankingsDialog && !showPersonalRankingsDialog && !isBingoPlayersLoading) ? (
+      {(!gameState.gameStarted && !gameState.gameEnded && !showRankingsDialog && !showPersonalRankingsDialog && !isBingoPlayersLoading) ? (
         <BingoGameWaiting
           gameState={gameState}
           lobbyInfo={lobbyInfo}

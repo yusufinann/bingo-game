@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const useBingoSocket = ({
   socket,
@@ -43,6 +43,9 @@ const useBingoSocket = ({
     useState(false);
   const [currentPlayerColor, setCurrentPlayerColor] = useState(null);
 
+  const [hasAttemptedJoinForLobby, setHasAttemptedJoinForLobby] = useState(false);
+  const prevLobbyCodeRef = useRef(lobbyCode);
+
   const onGameReset = useCallback(() => {
     setGameState((prev) => ({
       ...prev,
@@ -56,7 +59,7 @@ const useBingoSocket = ({
       winner: null,
       message: "",
       rankings: [],
-      players: [],
+      players: prev.players,
     }));
     setMarkedNumbers([]);
     setCompletedPlayers([]);
@@ -67,6 +70,7 @@ const useBingoSocket = ({
     setCountdown(null);
     setInitialJoinNotificationShown(false);
     setCurrentPlayerColor(null);
+    setHasAttemptedJoinForLobby(false);
     setIsBingoPlayersLoading(true);
   }, []);
 
@@ -124,23 +128,15 @@ const useBingoSocket = ({
   );
 
   useEffect(() => {
-    if (!socket || !isConnected) {
-      if (
-        isConnected === false &&
-        !gameState.gameStarted &&
-        !gameState.gameEnded
-      ) {
-        setIsBingoPlayersLoading(true);
-      }
-      return;
+    if (lobbyCode !== prevLobbyCodeRef.current) {
+      setHasAttemptedJoinForLobby(false);
+      setIsBingoPlayersLoading(true);
+      prevLobbyCodeRef.current = lobbyCode;
     }
+  }, [lobbyCode]);
 
-    if (
-      !gameState.gameId &&
-      !gameState.gameStarted &&
-      !gameState.gameEnded &&
-      currentUser?.id
-    ) {
+  useEffect(() => {
+    if (socket && isConnected && currentUser?.id && lobbyCode && !hasAttemptedJoinForLobby) {
       setIsBingoPlayersLoading(true);
       socket.send(
         JSON.stringify({
@@ -149,7 +145,17 @@ const useBingoSocket = ({
           playerId: currentUser.id,
         })
       );
+      setHasAttemptedJoinForLobby(true);
     }
+
+    if (!isConnected && hasAttemptedJoinForLobby) {
+      setHasAttemptedJoinForLobby(false);
+      if (!gameState.gameStarted && !gameState.gameEnded) {
+        setIsBingoPlayersLoading(true);
+      }
+    }
+
+    if (!socket) return;
 
     const handleMessage = (event) => {
       const data = JSON.parse(event.data);
@@ -164,6 +170,16 @@ const useBingoSocket = ({
         return t(notificationData.key, notificationData.params);
       };
 
+      const criticalMessageTypes = [
+        "BINGO_JOIN", "BINGO_GAME_STATUS", "BINGO_ERROR",
+        "BINGO_STARTED", "BINGO_COUNTDOWN", "BINGO_GAME_OVER",
+        "BINGO_GAME_STATE_UPDATED"
+      ];
+
+      if (criticalMessageTypes.includes(data.type) && isBingoPlayersLoading) {
+        setIsBingoPlayersLoading(false);
+      }
+      
       switch (data.type) {
         case "BINGO_JOIN":
           setGameState((prev) => {
@@ -221,15 +237,16 @@ const useBingoSocket = ({
           } else {
             setHasCompletedBingo(false);
           }
-          if (!initialJoinNotificationShown && !data.isRejoin) {
+          if (data.message && (!initialJoinNotificationShown || data.isRejoin)) {
             setNotification({
               open: true,
-              message: t("notifications.joinedSuccess"),
+              message: data.message,
               severity: "success",
             });
-            setInitialJoinNotificationShown(true);
+             if (!initialJoinNotificationShown && !data.isRejoin) {
+                setInitialJoinNotificationShown(true);
+             }
           }
-          setIsBingoPlayersLoading(false);
           break;
 
         case "BINGO_GAME_STATE_UPDATED":
@@ -263,9 +280,6 @@ const useBingoSocket = ({
               }),
               severity: "info",
             });
-          }
-          if (!gameState.gameStarted && (data.players || data.kickedPlayerId)) {
-            setIsBingoPlayersLoading(false);
           }
           break;
 
@@ -386,14 +400,10 @@ const useBingoSocket = ({
               severity: "info",
             });
           }
-          if (!gameState.gameStarted) {
-            setIsBingoPlayersLoading(false);
-          }
           break;
         case "BINGO_COUNTDOWN":
           setCountdown(data.countdown);
           playSoundCallback("countdown");
-          setIsBingoPlayersLoading(false);
           break;
         case "BINGO_STARTED":
           setMarkedNumbers([]);
@@ -437,7 +447,6 @@ const useBingoSocket = ({
             severity: "success",
           });
           playSoundCallback("gameStart");
-          setIsBingoPlayersLoading(false);
           break;
         case "BINGO_NUMBER_DRAWN":
           setGameState((prev) => ({
@@ -471,30 +480,22 @@ const useBingoSocket = ({
             severity: "error",
           });
           break;
-        case "BINGO_GAME_STATUS":
+       case "BINGO_GAME_STATUS":
           setGameState((prev) => ({
             ...prev,
-            drawnNumbers:
-              data.drawnNumbers !== undefined
-                ? data.drawnNumbers
-                : prev.drawnNumbers,
-            activeNumbers:
-              data.activeNumbers !== undefined
-                ? data.activeNumbers
-                : prev.activeNumbers,
-            currentNumber:
-              data.currentNumber !== undefined
-                ? data.currentNumber
-                : prev.currentNumber,
-            players: data.players !== undefined ? data.players : prev.players,
-            rankings:
-              data.rankings !== undefined ? data.rankings : prev.rankings,
-            gameStarted:
-              data.gameStarted !== undefined
-                ? data.gameStarted
-                : prev.gameStarted,
-            gameEnded:
-              data.gameEnded !== undefined ? data.gameEnded : prev.gameEnded,
+            drawnNumbers: data.drawnNumbers !== undefined ? data.drawnNumbers : prev.drawnNumbers,
+            activeNumbers: data.activeNumbers !== undefined ? data.activeNumbers : prev.activeNumbers,
+            currentNumber: data.currentNumber !== undefined ? data.currentNumber : prev.currentNumber,
+            players: data.players !== undefined ? data.players.map(p => ({...p})) : prev.players,
+            rankings: data.rankings !== undefined ? data.rankings : prev.rankings,
+            gameStarted: data.gameStarted !== undefined ? data.gameStarted : prev.gameStarted,
+            gameEnded: data.gameEnded !== undefined ? data.gameEnded : prev.gameEnded,
+            gameId: data.gameId || prev.gameId,
+            drawMode: data.drawMode || prev.drawMode,
+            drawer: data.drawer !== undefined ? data.drawer : prev.drawer,
+            bingoMode: data.bingoMode || prev.bingoMode,
+            competitionMode: data.competitionMode || prev.competitionMode,
+            message: data.message || prev.message,
           }));
           setCompletedPlayers(data.completedPlayers || []);
           if (data.completedPlayers && currentUser?.id) {
@@ -514,20 +515,14 @@ const useBingoSocket = ({
             }));
             setShowRankingsDialog(true);
           }
-          if (data.players && !gameState.gameStarted) {
-            setIsBingoPlayersLoading(false);
-          }
           break;
         case "BINGO_GAME_OVER":
-          setGameState((prev) => {
-            const newGameState = {
-              ...prev,
-              gameEnded: true,
-              gameStarted: false,
-              rankings: data.finalRankings || [],
-            };
-            return newGameState;
-          });
+          setGameState((prev) => ({
+            ...prev,
+            gameEnded: true,
+            gameStarted: false,
+            rankings: data.finalRankings || [],
+          }));
 
           const allPlayersFromRankings = data.finalRankings
             ? data.finalRankings.map((p) => ({
@@ -555,7 +550,6 @@ const useBingoSocket = ({
           setShowRankingsDialog(true);
           setShowPersonalRankingsDialog(false);
           playSoundCallback("gameOver");
-          setIsBingoPlayersLoading(false);
           break;
         case "BINGO_ERROR":
           setNotification({
@@ -645,14 +639,15 @@ const useBingoSocket = ({
     };
   }, [
     socket,
-    lobbyCode,
+    isConnected,
     currentUser?.id,
+    lobbyCode,
+    hasAttemptedJoinForLobby,
     playSoundCallback,
     t,
-    isConnected,
     onGameReset,
     initialJoinNotificationShown,
-    gameState.gameId,
+    isBingoPlayersLoading,
     gameState.gameStarted,
     gameState.gameEnded,
   ]);
